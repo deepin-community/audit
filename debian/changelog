@@ -1,0 +1,5 @@
+audit (1:3.0.8.1-deepin) stable; urgency=medium
+
+  * ['Rebuild  against by  current gcc 11.2']
+
+ -- Deepin Packages Builder <packages@deepin.org>  Thu, 11 Aug 2022 21:40:14 +0800
