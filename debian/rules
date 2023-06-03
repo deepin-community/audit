@@ -30,10 +30,6 @@ ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes), yes)
   CONFIGURE_FLAGS += --disable-listener
 endif
 
-ifeq ($(DEB_BUILD_GNU_CPU),sw_64)
-  EXTRA_ARCH_TABLE := --with-sunway
-endif
-
 %:
 	dh $@ --builddirectory=debian/build --buildsystem=autoconf $(DH_ADDONS)
 
