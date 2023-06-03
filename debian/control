@@ -1,6 +1,6 @@
 Source: audit
 Priority: optional
-Maintainer: Deepin Developer <deepin-dev@deepin.org>
+Maintainer: Laurent Bigonville <bigon@debian.org>
 Build-Depends: debhelper-compat (= 12),
                dh-python <!nopython>,
 #               dh-golang,
@@ -16,11 +16,11 @@ Build-Depends: debhelper-compat (= 12),
                libpython3-all-dev <!nopython>,
                swig
 Build-Depends-Indep: golang-go
-Standards-Version: 4.6.0
+Standards-Version: 4.6.2
 Section: libs
 Homepage: https://people.redhat.com/sgrubb/audit/
-#Vcs-Git
-#Vcs-Browser
+Vcs-Git: https://salsa.debian.org/debian/audit.git
+Vcs-Browser: https://salsa.debian.org/debian/audit
 Rules-Requires-Root: binary-targets
 
 Package: auditd
@@ -28,7 +28,6 @@ Section: admin
 Architecture: linux-any
 Depends: libaudit1 (= ${binary:Version}),
          libauparse0 (= ${binary:Version}),
-         lsb-base (>= 3.0-6),
          mawk | gawk,
          ${misc:Depends},
          ${shlibs:Depends}
@@ -58,7 +57,7 @@ Package: libauparse-dev
 Section: libdevel
 Architecture: linux-any
 Depends: libauparse0 (= ${binary:Version}), ${misc:Depends}
-Multi-arch: same
+Multi-Arch: same
 Description: Header files and static library for the libauparse0 library
  The audit-libs parse package contains the dynamic libraries needed for
  applications to use the audit framework. It is used to monitor systems for
@@ -92,7 +91,7 @@ Package: libaudit-dev
 Section: libdevel
 Architecture: linux-any
 Depends: libaudit1 (= ${binary:Version}), libcap-ng-dev, ${misc:Depends}
-Multi-arch: same
+Multi-Arch: same
 Description: Header files and static library for security auditing
  The audit-libs-devel package contains the static libraries and header
  files needed for developing applications that need to use the audit
@@ -114,7 +113,7 @@ Description: Python3 bindings for security auditing
  parse and process the security event messages.
 
 Package: golang-redhat-audit-dev
-Section: devel
+Section: golang
 Architecture: all
 Depends: ${misc:Depends}
 Multi-Arch: foreign

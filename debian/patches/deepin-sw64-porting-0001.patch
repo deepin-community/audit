@@ -1,9 +1,6 @@
-Origin: uos
-Last-Update: 2022-05-18
-
---- audit-3.0.6.orig/configure.ac
-+++ audit-3.0.6/configure.ac
-@@ -366,6 +366,18 @@ AM_CONDITIONAL(USE_AARCH64, test x$use_a
+--- a/configure.ac
++++ b/configure.ac
+@@ -394,6 +394,19 @@
  AC_MSG_RESULT($use_aarch64)
  
  withval=""
@@ -19,12 +16,13 @@ Last-Update: 2022-05-18
 +AC_MSG_RESULT($use_sunway)
 +
 +withval=""
++
  AC_MSG_CHECKING(whether to use apparmor)
  AC_ARG_WITH(apparmor,
  AS_HELP_STRING([--with-apparmor],[enable AppArmor events]),
---- audit-3.0.6.orig/lib/Makefile.am
-+++ audit-3.0.6/lib/Makefile.am
-@@ -54,6 +54,9 @@ endif
+--- a/lib/Makefile.am
++++ b/lib/Makefile.am
+@@ -54,6 +54,9 @@
  if USE_AARCH64
  BUILT_SOURCES += aarch64_tables.h
  endif
@@ -34,7 +32,7 @@ Last-Update: 2022-05-18
  noinst_PROGRAMS = gen_actiontabs_h gen_errtabs_h gen_fieldtabs_h \
  	gen_flagtabs_h gen_fstypetabs_h gen_ftypetabs_h gen_i386_tables_h \
  	gen_machinetabs_h gen_msg_typetabs_h \
-@@ -65,6 +68,9 @@ endif
+@@ -65,6 +68,9 @@
  if USE_AARCH64
  noinst_PROGRAMS += gen_aarch64_tables_h
  endif
@@ -44,7 +42,7 @@ Last-Update: 2022-05-18
  gen_actiontabs_h_SOURCES = gen_tables.c gen_tables.h actiontab.h
  gen_actiontabs_h_CFLAGS = '-DTABLE_H="actiontab.h"'
  $(gen_actiontabs_h_OBJECTS): CC=$(CC_FOR_BUILD)
-@@ -108,6 +114,21 @@ aarch64_tables.h: gen_aarch64_tables_h M
+@@ -108,6 +114,21 @@
  	./gen_aarch64_tables_h --lowercase --i2s --s2i aarch64_syscall > $@
  endif
  
@@ -66,9 +64,9 @@ Last-Update: 2022-05-18
  gen_errtabs_h_SOURCES = gen_tables.c gen_tables.h errtab.h
  gen_errtabs_h_CFLAGS = '-DTABLE_H="errtab.h"'
  $(gen_errtabs_h_OBJECTS): CC=$(CC_FOR_BUILD)
---- audit-3.0.6.orig/lib/libaudit.h
-+++ audit-3.0.6/lib/libaudit.h
-@@ -569,6 +569,7 @@ typedef enum {
+--- a/lib/libaudit.h
++++ b/lib/libaudit.h
+@@ -583,6 +583,7 @@
  	MACH_S390X,
  	MACH_S390,
  	MACH_ALPHA,	// Deprecated but has to stay
@@ -76,8 +74,8 @@ Last-Update: 2022-05-18
  	MACH_ARM,
  	MACH_AARCH64,
  	MACH_PPC64LE
---- audit-3.0.6.orig/lib/lookup_table.c
-+++ audit-3.0.6/lib/lookup_table.c
+--- a/lib/lookup_table.c
++++ b/lib/lookup_table.c
 @@ -41,6 +41,9 @@
  #ifdef WITH_AARCH64
  #include "aarch64_tables.h"
@@ -88,7 +86,7 @@ Last-Update: 2022-05-18
  #include "i386_tables.h"
  #include "ppc_tables.h"
  #include "s390_tables.h"
-@@ -76,6 +79,9 @@ static const struct int_transtab elftab[
+@@ -76,6 +79,9 @@
  #ifdef WITH_AARCH64
      { MACH_AARCH64, AUDIT_ARCH_AARCH64},
  #endif
@@ -98,7 +96,7 @@ Last-Update: 2022-05-18
  };
  #define AUDIT_ELF_NAMES (sizeof(elftab)/sizeof(elftab[0]))
  
-@@ -133,6 +139,11 @@ int audit_name_to_syscall(const char *sc
+@@ -133,6 +139,11 @@
  			found = aarch64_syscall_s2i(sc, &res);
  			break;
  #endif
@@ -110,7 +108,7 @@ Last-Update: 2022-05-18
  #endif
  		default:
  			return -1;
-@@ -167,6 +178,10 @@ const char *audit_syscall_to_name(int sc
+@@ -167,6 +178,10 @@
  	        case MACH_AARCH64:
  			return aarch64_syscall_i2s(sc);
  #endif
@@ -121,9 +119,9 @@ Last-Update: 2022-05-18
  	}
  #endif
  	return NULL;
---- audit-3.0.6.orig/lib/machinetab.h
-+++ audit-3.0.6/lib/machinetab.h
-@@ -42,3 +42,6 @@ _S(MACH_ARM,   "armv7l")
+--- a/lib/machinetab.h
++++ b/lib/machinetab.h
+@@ -42,3 +42,6 @@
  _S(MACH_AARCH64,   "aarch64"  )
  _S(MACH_AARCH64,   "armv8l")
  #endif
@@ -131,7 +129,7 @@ Last-Update: 2022-05-18
 +_S(MACH_SUNWAY,   "sw_64"  )
 +#endif
 --- /dev/null
-+++ audit-3.0.6/lib/sunway_table.h
++++ audit-3.0.9/lib/sunway_table.h
 @@ -0,0 +1,385 @@
 +/* sunway_table.h --
 + * Copyright 2022 Deepin Technology Co., Ltd.
@@ -518,9 +516,9 @@ Last-Update: 2022-05-18
 +_S(516, "preadv2")
 +_S(517, "pwritev2")
 +_S(518, "statx")
---- audit-3.0.6.orig/src/libev/ev.c
-+++ audit-3.0.6/src/libev/ev.c
-@@ -839,6 +839,8 @@ struct signalfd_siginfo
+--- a/src/libev/ev.c
++++ b/src/libev/ev.c
+@@ -839,6 +839,8 @@
        #define ECB_MEMORY_FENCE         __asm__ __volatile__ ("tb1 0,%%r0,128" : : : "memory")
      #elif defined __sh__
        #define ECB_MEMORY_FENCE         __asm__ __volatile__ (""         : : : "memory")
@@ -529,7 +527,7 @@ Last-Update: 2022-05-18
      #endif
    #endif
  #endif
-@@ -1555,6 +1557,7 @@ ecb_binary32_to_binary16 (uint32_t x)
+@@ -1555,6 +1557,7 @@
      || defined __m68k__ \
      || defined __m88k__ \
      || defined __sh__ \
