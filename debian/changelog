@@ -1,4 +1,4 @@
-audit (1:3.0.9-1deepin) unstable; urgency=medium
+audit (1:3.0.9-1deepin1) unstable; urgency=medium
 
   [ Gui-Yue ]
   * Refresh deepin-sw64-porting-0001.patch.
