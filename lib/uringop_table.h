@@ -1,5 +1,5 @@
-/* flagtab.h --
- * Copyright 2005,2006,2016,2022 Red Hat Inc.
+/* uringop_table.h --
+ * Copyright 2005-23 Red Hat Inc.
  * All Rights Reserved.
  *
  * This library is free software; you can redistribute it and/or
@@ -17,17 +17,38 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * Authors:
- *      Steve Grubb <sgrubb@redhat.com>
  *      Richard Guy Briggs <rgb@redhat.com>
  */
-#include "config.h"
 
-_S(AUDIT_FILTER_TASK,       "task"      )
-_S(AUDIT_FILTER_EXIT,       "exit"      )
-_S(AUDIT_FILTER_USER,       "user"      )
-_S(AUDIT_FILTER_EXCLUDE,    "exclude"   )
-_S(AUDIT_FILTER_FS,         "filesystem")
-#ifdef WITH_IO_URING
-_S(AUDIT_FILTER_URING_EXIT, "io_uring"  )
-#endif
+/*
+ *  From /usr/include/linux/io_uring.h
+ *  kernel location here: io_uring/opdef.c
+ *
+ *  Note: not all ops are auditable for performance reasons. This was
+ *  discussed on the linux-audit mail list:
+ *  https://listman.redhat.com/archives/linux-audit/2021-June/018042.html
+ */
+
+_S(9,	"sendmsg")
+_S(10,	"recvmsg")
+_S(13,	"accept")
+_S(16,	"connect")
+_S(17,	"fallocate")
+_S(18,	"openat")
+_S(19,	"close")
+_S(28,	"openat2")
+_S(34,	"shutdown")
+_S(35,	"renameat")
+_S(36,	"unlinkat")
+_S(37,  "mkdirat")
+_S(38,  "symlinkat")
+_S(39,  "linkat")
+_S(40,  "msg_ring")
+_S(41,  "fsetxattr")
+_S(42,  "setxattr")
+_S(43,  "fgetxattr")
+_S(44,  "getxattr")
+_S(46,  "uring_cmd")
+_S(47,  "send_zc")
+_S(48,	"sendmsg_zc")
 

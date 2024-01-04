@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # Makefile.am --
-# Copyright 2007-08,2018,2021 Red Hat Inc.
+# Copyright 2007-08,2018-23 Red Hat Inc.
 # All Rights Reserved.
 #
 # This library is free software; you can redistribute it and/or
@@ -178,7 +178,7 @@ am__define_uniq_tagged_files = \
   unique=`for i in $$list; do \
     if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
   done | $(am__uniquify_input)`
-DIST_SUBDIRS = builtins remote syslog ids statsd zos-remote
+DIST_SUBDIRS = af_unix remote syslog ids statsd zos-remote
 am__DIST_COMMON = $(srcdir)/Makefile.in
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 am__relativize = \
@@ -217,6 +217,7 @@ AWK = @AWK@
 BUILD_EXEEXT = @BUILD_EXEEXT@
 BUILD_OBJEXT = @BUILD_OBJEXT@
 CAPNG_LDADD = @CAPNG_LDADD@
+CAPNG_PKG = @CAPNG_PKG@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CC_FOR_BUILD = @CC_FOR_BUILD@
@@ -297,6 +298,7 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SWIG = @SWIG@
 VERSION = @VERSION@
 WFLAGS = @WFLAGS@
 abs_builddir = @abs_builddir@
@@ -367,7 +369,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 use_python3 = @use_python3@
 CONFIG_CLEAN_FILES = *.loT *.rej *.orig
-SUBDIRS = builtins remote syslog $(am__append_1) $(am__append_2)
+SUBDIRS = af_unix remote syslog $(am__append_1) $(am__append_2)
 all: all-recursive
 
 .SUFFIXES:

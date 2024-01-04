@@ -35,6 +35,9 @@
 /* Define to 1 if you have the `eventfd' function. */
 #undef HAVE_EVENTFD
 
+/* Define to 1 if you have the `faccessat' function. */
+#undef HAVE_FACCESSAT
+
 /* Define to 1 if the floor function is available */
 #undef HAVE_FLOOR
 
@@ -176,6 +179,12 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
+/* The size of `long', as computed by sizeof. */
+#undef SIZEOF_LONG
+
+/* The size of `time_t', as computed by sizeof. */
+#undef SIZEOF_TIME_T
+
 /* The size of `unsigned int', as computed by sizeof. */
 #undef SIZEOF_UNSIGNED_INT
 
@@ -211,3 +220,6 @@
 
 /* Define if you want to enable Arm eabi processor support. */
 #undef WITH_ARM
+
+/* Define if you want to enable io_uring support. */
+#undef WITH_IO_URING

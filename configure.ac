@@ -1,7 +1,7 @@
 dnl
 define([AC_INIT_NOTICE],
 [### Generated automatically using autoconf version] AC_ACVERSION [
-### Copyright 2005-22 Steve Grubb <sgrubb@redhat.com>
+### Copyright 2005-23 Steve Grubb <sgrubb@redhat.com>
 ###
 ### Permission is hereby granted, free of charge, to any person obtaining a
 ### copy of this software and associated documentation files (the "Software"),
@@ -29,16 +29,16 @@ define([AC_INIT_NOTICE],
 ])
 
 AC_REVISION($Revision: 1.3 $)dnl
-AC_INIT(audit,3.0.9)
-AC_PREREQ(2.12)dnl
-AM_CONFIG_HEADER(config.h)
+AC_INIT([audit], [3.1.2])
+AC_PREREQ([2.50])dnl
+AC_CONFIG_HEADERS([config.h])
 
 echo Configuring auditd $VERSION
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
-AM_PROG_LIBTOOL
+LT_INIT
 AC_SUBST(LIBTOOL_DEPS)
 OLDLIBS="$LIBS"
 m4_include([src/libev/libev.m4])
@@ -55,11 +55,12 @@ AX_PROG_CC_FOR_BUILD
 
 echo .
 echo Checking for header files
-AC_HEADER_STDC
 AC_HEADER_TIME
 
 AC_CHECK_SIZEOF([unsigned int])
 AC_CHECK_SIZEOF([unsigned long])
+AC_CHECK_SIZEOF([long])
+AC_CHECK_SIZEOF([time_t])
 dnl; next is needed for old compilers and plugins/ids/Makefile.am
 AM_PROG_CC_C_O
 AC_CHECK_DECLS([AUDIT_FEATURE_VERSION], [], [], [[#include <linux/audit.h>]])
@@ -74,6 +75,8 @@ dnl; signalfd is needed for libev
 AC_CHECK_FUNC([signalfd], [], [ AC_MSG_ERROR([The signalfd system call is necessary for auditd]) ])
 dnl; check if rawmemchr is available
 AC_CHECK_FUNCS([rawmemchr])
+dnl; check if faccessat is available
+AC_CHECK_FUNCS([faccessat])
 dnl; check if strndupa is available
 AC_LINK_IFELSE(
   [AC_LANG_SOURCE(
@@ -157,7 +160,7 @@ else
 	if test "x$use_python" = xyes ; then
 		AC_MSG_ERROR([Python explicitly requested and python headers were not found])
 	else
-		AC_MSG_WARN("Python headers not found - python bindings will not be made")
+		AC_MSG_WARN(Python headers not found - python bindings will not be made)
 	fi
 fi
 fi
@@ -209,6 +212,11 @@ else
 fi
 AM_CONDITIONAL(USE_PYTHON3, test ${use_python3} = "yes")
 
+if test "x$use_python" = "xyes" || test "x$use_python3" = "xyes" ; then
+	AC_CHECK_PROG([SWIG],[swig],[swig], [no])
+	AS_IF([test x"$SWIG" == x"no"], [AC_MSG_ERROR([Please install swig before configuring (required by python/python3).])])
+fi
+
 withval=""
 AC_MSG_CHECKING(whether to create Go language bindings)
 AC_ARG_WITH(golang,
@@ -232,7 +240,7 @@ else
 	if test "x$use_golang" = xyes ; then
 		AC_MSG_ERROR([Go language explicitly requested and program not found])
 	else
-		AC_MSG_WARN("Go not found - go bindings will not be made")
+		AC_MSG_WARN(Go not found - go bindings will not be made)
 	fi
     ])
 fi
@@ -434,8 +442,9 @@ AC_ARG_WITH(libwrap,
 			LIBWRAP_LIBS="$LIBWRAP_LIBS -lnsl" ])
 		OLDLIBS="$LIBS"
 		LIBS="$LIBWRAP_LIBS $LIBS"
-		AC_TRY_LINK([ int allow_severity; int deny_severity; ],
-			[ hosts_access(); ], [],
+		AC_LINK_IFELSE([AC_LANG_PROGRAM(
+			[[ int allow_severity; int deny_severity; ]],
+			[[ hosts_access(); ]])],[],
 			[ AC_MSG_ERROR(Could not find the $withval library.  You must first install tcp_wrappers.) ])
 		LIBS="$OLDLIBS"
 		;;
@@ -445,6 +454,18 @@ AC_ARG_WITH(libwrap,
 if test x"$LIBWRAP_LIBS" != "x"; then
 	AC_DEFINE_UNQUOTED(HAVE_LIBWRAP, [], Define if tcp_wrappers support is enabled )
 fi
+
+withval=""
+AC_MSG_CHECKING(whether to include io_uring support)
+AC_ARG_WITH(io_uring,
+AS_HELP_STRING([--with-io_uring],[enable io_uring support]),
+use_io_uring=$withval,
+use_io_uring=no)
+if test x$use_io_uring != xno ; then
+     AC_DEFINE(WITH_IO_URING,1,[Define if you want to enable io_uring support.])
+fi
+# AM_CONDITIONAL(USE_IO_URING, test x$use_io_uring = xyes)
+AC_MSG_RESULT($use_io_uring)
 
 # linux/ipx.h - deprecated in 2018
 AC_CHECK_HEADER(linux/ipx.h, ipx_headers=yes, ipx_headers=no)
@@ -459,7 +480,8 @@ AC_SUBST(DEBUG)
 AC_SUBST(LIBWRAP_LIBS)
 #AC_SUBST(libev_LIBS)
 
-AC_OUTPUT(Makefile common/Makefile lib/Makefile lib/audit.pc lib/test/Makefile auparse/Makefile auparse/test/Makefile auparse/auparse.pc src/Makefile src/libev/Makefile src/test/Makefile docs/Makefile rules/Makefile init.d/Makefile audisp/Makefile audisp/plugins/Makefile audisp/plugins/builtins/Makefile audisp/plugins/remote/Makefile audisp/plugins/zos-remote/Makefile audisp/plugins/syslog/Makefile audisp/plugins/ids/Makefile audisp/plugins/ids/rules/Makefile audisp/plugins/statsd/Makefile bindings/Makefile bindings/python/Makefile bindings/python/python2/Makefile bindings/python/python3/Makefile bindings/golang/Makefile bindings/swig/Makefile bindings/swig/src/Makefile bindings/swig/python/Makefile bindings/swig/python3/Makefile tools/Makefile tools/aulast/Makefile tools/aulastlog/Makefile tools/ausyscall/Makefile tools/auvirt/Makefile m4/Makefile)
+AC_CONFIG_FILES(Makefile common/Makefile lib/Makefile lib/audit.pc lib/test/Makefile auparse/Makefile auparse/test/Makefile auparse/auparse.pc src/Makefile src/libev/Makefile src/test/Makefile docs/Makefile rules/Makefile init.d/Makefile audisp/Makefile audisp/plugins/Makefile audisp/plugins/af_unix/Makefile audisp/plugins/remote/Makefile audisp/plugins/zos-remote/Makefile audisp/plugins/syslog/Makefile audisp/plugins/ids/Makefile audisp/plugins/ids/rules/Makefile audisp/plugins/statsd/Makefile bindings/Makefile bindings/python/Makefile bindings/python/python2/Makefile bindings/python/python3/Makefile bindings/golang/Makefile bindings/swig/Makefile bindings/swig/src/Makefile bindings/swig/python/Makefile bindings/swig/python3/Makefile tools/Makefile tools/aulast/Makefile tools/aulastlog/Makefile tools/ausyscall/Makefile tools/auvirt/Makefile m4/Makefile)
+AC_OUTPUT
 
 echo .
 echo "

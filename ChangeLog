@@ -1,3 +1,34 @@
+3.1.2
+- When processing a run level change, make auditd exit
+- In auditd, fix return code when rules added in immutable mode
+- In auparse, when files are given, also consider EUID for access
+- Auparse now interprets unnamed/anonymous sockets (Enzo Matsumiya)
+- Disable Python bindings from setting rules due to swig bug (S. Trofimovich)
+- Update all lookup tables for the 6.5 kernel
+- Don't be as paranoid about auditctl -R file permissions
+- In ausearch, correct subject/object search to be an and if both are given
+- Adjust formats for 64 bit time_t
+- Fix segfault in python bindings around the feed API
+- Add feed_has_data, get_record_num, and get/goto_field_num to python bindings
+
+3.1.1
+- Add user friendly keywords for signals to auditctl
+- In ausearch, parse up URINGOP and DM_CTRL records
+- Harden auparse to better handle corrupt logs
+- Fix a CFLAGS propogation problem in the common directory
+- Move the audispd af_unix plugin to a standalone program
+
+3.1
+- Disable ProtectControlGroups in auditd.service by default
+- Fix rule checking for exclude filter
+- Make audit_rule_syscallbyname_data work correctly outside of auditctl
+- Add new record types
+- Add io_uring support
+- Add support for new FANOTIFY record fields
+- Add keyword, this-hour, to ausearch/report start/end options
+- Add Requires.private to audit.pc file
+- Try to interpret OPENAT2 fields correctly
+
 3.0.9
 - In auditd, release the async flush lock on stop
 - Don't allow auditd to log directly into /var/log when log_group is non-zero
@@ -145,7 +176,7 @@
 - Fix memleak in auparse caused by corrected event ordering
 - Fix legacy reload script to reload audit rules when daemon is reloaded
 - Support for unescaping in trusted messages (Dmitry Voronin)
-- In auditd, use standard template for DEAMON events (Richard Guy Briggs)
+- In auditd, use standard template for DAEMON events (Richard Guy Briggs)
 - In aureport, fix segfault for malformed USER_CMD events
 - Add exe field to audit_log_user_command in libaudit
 - In auditctl support filter on socket address families (Richard Guy Briggs)

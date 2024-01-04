@@ -1,5 +1,5 @@
-/* auditctl.c -- 
- * Copyright 2004-2017,2020 Red Hat Inc.
+/* auditctl.c --
+ * Copyright 2004-2017,20-23 Red Hat Inc.
  * All Rights Reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -153,18 +153,10 @@ static void usage(void)
 
 static int lookup_filter(const char *str, int *filter)
 {
-	if (strcmp(str, "exit") == 0)
-		*filter = AUDIT_FILTER_EXIT;
-	else if (strcmp(str, "task") == 0)
-		*filter = AUDIT_FILTER_TASK;
-	else if (strcmp(str, "user") == 0)
-		*filter = AUDIT_FILTER_USER;
-	else if (strcmp(str, "exclude") == 0) {
-		*filter = AUDIT_FILTER_EXCLUDE;
+	*filter = audit_name_to_flag(str);
+	if (*filter == AUDIT_FILTER_EXCLUDE)
 		exclude = 1;
-	} else if (strcmp(str, "filesystem") == 0)
-		*filter = AUDIT_FILTER_FS;
-	else
+	if (*filter == -1)
 		return 2;
 	return 0;
 }
@@ -421,15 +413,20 @@ static int send_signal(const char *optarg)
 	FD_ZERO(&read_mask);
 	FD_SET(fd, &read_mask);
 
-	if (strcasecmp(optarg, "TERM") == 0)
+	if (strcasecmp(optarg, "TERM") == 0 ||
+	    strcasecmp(optarg, "stop") == 0)
 		signal = SIGTERM;
-	else if (strcasecmp(optarg, "HUP") == 0)
+	else if (strcasecmp(optarg, "HUP") == 0 ||
+		 strcasecmp(optarg, "reload") == 0)
 		signal = SIGHUP;
-	else if (strcasecmp(optarg, "USR1") == 0)
+	else if (strcasecmp(optarg, "USR1") == 0 ||
+		 strcasecmp(optarg, "rotate") == 0)
 		signal = SIGUSR1;
-	else if (strcasecmp(optarg, "USR2") == 0)
+	else if (strcasecmp(optarg, "USR2") == 0 ||
+		 strcasecmp(optarg, "resume") == 0)
 		signal = SIGUSR2;
-	else if (strcasecmp(optarg, "CONT") == 0)
+	else if (strcasecmp(optarg, "CONT") == 0 ||
+		 strcasecmp(optarg, "state") == 0)
 		signal = SIGCONT;
 
 	if (signal == 0) {
@@ -540,6 +537,29 @@ static int parse_syscall(const char *optarg)
 
 	return audit_rule_syscallbyname_data(rule_new, optarg);
 }
+
+#ifdef WITH_IO_URING
+// return 0 on success and -1 if unknow op.
+static int parse_io_uring(const char *optarg)
+{
+	if (strchr(optarg, ',')) {
+		int retval;
+		char *saved, *ptr, *tmp = strdup(optarg);
+		if (tmp == NULL)
+			return -1;
+		ptr = strtok_r(tmp, ",", &saved);
+		while (ptr) {
+			retval = audit_rule_io_uringbyname_data(rule_new, ptr);
+			if (retval != 0)
+				break;
+			ptr = strtok_r(NULL, ",", &saved);
+		}
+		free(tmp);
+		return retval;
+	}
+	return audit_rule_io_uringbyname_data(rule_new, optarg);
+}
+#endif
 
 static struct option long_opts[] =
 {
@@ -782,6 +802,29 @@ static int setopt(int count, int lineno, char *vars[])
 		break;
         case 'S': {
 		int unknown_arch = !_audit_elf;
+#ifdef WITH_IO_URING
+		if (((add & (AUDIT_FILTER_MASK|AUDIT_FILTER_UNSET)) ==
+				AUDIT_FILTER_URING_EXIT || (del &
+				(AUDIT_FILTER_MASK|AUDIT_FILTER_UNSET)) ==
+				AUDIT_FILTER_URING_EXIT)) {
+			// Do io_uring op
+			rc = parse_io_uring(optarg);
+			switch (rc)
+			{
+				case 0:
+					_audit_syscalladded = 1;
+					retval = 1; /* success - please send */
+					break;
+				case -1:
+					audit_msg(LOG_ERR,
+						  "io_uring op unknown: %s",
+						  optarg);
+				retval = -1;
+				break;
+			}
+			break;
+		}
+#endif
 		/* Do some checking to make sure that we are not adding a
 		 * syscall rule to a list that does not make sense. */
 		if (((add & (AUDIT_FILTER_MASK|AUDIT_FILTER_UNSET)) ==
@@ -1286,16 +1329,6 @@ static int fileopt(const char *file)
 		close(tfd);
 		return 1;
 	}
-	if (st.st_uid != 0) {
-		audit_msg(LOG_ERR, "Error - %s isn't owned by root", file);
-		close(tfd);
-		return 1;
-	} 
-	if ((st.st_mode & S_IWOTH) == S_IWOTH) {
-		audit_msg(LOG_ERR, "Error - %s is world writable", file);
-		close(tfd);
-		return 1;
-	}
 	if (!S_ISREG(st.st_mode)) {
 		audit_msg(LOG_ERR, "Error - %s is not a regular file", file);
 		close(tfd);
@@ -1421,7 +1454,7 @@ int main(int argc, char *argv[])
 		set_aumessage_mode(MSG_SYSLOG, DBG_NO);
 		fd = audit_open();
 		if (is_ready() == 0)
-			return 0;
+			return 1;
 		else if (fileopt(argv[2])) {
 			free(rule_new);
 			return 1;
@@ -1447,10 +1480,20 @@ int main(int argc, char *argv[])
 		fd = audit_open();
 		if (is_ready() == 0) {
 			free(rule_new);
-			return 0;
+			return 1;
 		}
 	}
 	retval = handle_request(retval);
+	if (retval == -1) {
+		if (errno != ECONNREFUSED)
+			audit_msg(LOG_ERR,
+				"There was an error while processing parameters");
+		else {
+			audit_msg(LOG_ERR,
+				"The audit system is disabled");
+			return 0;
+		}
+	}
 	free(rule_new);
 	return retval;
 }

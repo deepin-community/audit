@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # Makefile.am-- 
-# Copyright 2018 Red Hat Inc., Durham, North Carolina.
+# Copyright 2018-2023 Red Hat Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -209,6 +209,7 @@ AWK = @AWK@
 BUILD_EXEEXT = @BUILD_EXEEXT@
 BUILD_OBJEXT = @BUILD_OBJEXT@
 CAPNG_LDADD = @CAPNG_LDADD@
+CAPNG_PKG = @CAPNG_PKG@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CC_FOR_BUILD = @CC_FOR_BUILD@
@@ -289,6 +290,7 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SWIG = @SWIG@
 VERSION = @VERSION@
 WFLAGS = @WFLAGS@
 abs_builddir = @abs_builddir@
@@ -359,7 +361,8 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 use_python3 = @use_python3@
 CONFIG_CLEAN_FILES = *.rej *.orig
-AM_CPPFLAGS = -D_GNU_SOURCE -fPIC -DPIC -I${top_srcdir} -I${top_srcdir}/lib
+AM_CFLAGS = -fPIC -DPIC -D_GNU_SOURCE -g
+AM_CPPFLAGS = -I${top_srcdir} -I${top_srcdir}/lib
 noinst_HEADERS = common.h
 libaucommon_la_DEPENDENCIES = ../config.h
 libaucommon_la_SOURCES = audit-fgets.c strsplit.c

@@ -1,5 +1,5 @@
 /* libaudit.h --
- * Copyright 2004-2018,2021-22 Red Hat Inc.
+ * Copyright 2004-2018,2021-23 Red Hat Inc.
  * All Rights Reserved.
  *
  * This library is free software; you can redistribute it and/or
@@ -321,6 +321,14 @@ extern "C" {
 #define AUDIT_OPENAT2		1337 /* openat2 open_how flags */
 #endif
 
+#ifndef AUDIT_DM_CTRL
+#define AUDIT_DM_CTRL		1338 /* Device Mapper target control */
+#endif
+
+#ifndef AUDIT_DM_EVENT
+#define AUDIT_DM_EVENT		1339 /* Device Mapper events */
+#endif
+
 #ifndef AUDIT_MAC_CALIPSO_ADD
 #define AUDIT_MAC_CALIPSO_ADD	1418 /* NetLabel: add CALIPSO DOI entry */
 #endif
@@ -343,6 +351,9 @@ extern "C" {
 /* These are used in filter control */
 #ifndef AUDIT_FILTER_FS
 #define AUDIT_FILTER_FS		0x06 /* FS record filter in __audit_inode_child */
+#endif
+#ifndef AUDIT_FILTER_URING_EXIT
+#define AUDIT_FILTER_URING_EXIT 0x07 /* Apply rule at io_uring op exit */
 #endif
 #ifndef AUDIT_FILTER_EXCLUDE
 #define AUDIT_FILTER_EXCLUDE	AUDIT_FILTER_TYPE
@@ -585,7 +596,8 @@ typedef enum {
 	MACH_ALPHA,	// Deprecated but has to stay
 	MACH_ARM,
 	MACH_AARCH64,
-	MACH_PPC64LE
+	MACH_PPC64LE,
+	MACH_IO_URING
 } machine_t;
 
 /* These are the valid audit failure tunable enum values */
@@ -620,6 +632,8 @@ extern int        audit_name_to_field(const char *field);
 extern const char *audit_field_to_name(int field);
 extern int        audit_name_to_syscall(const char *sc, int machine);
 extern const char *audit_syscall_to_name(int sc, int machine);
+extern const char *audit_uringop_to_name(int uringop);
+extern int        audit_name_to_uringop(const char *uringop);
 extern int        audit_name_to_flag(const char *flag);
 extern const char *audit_flag_to_name(int flag);
 extern int        audit_name_to_action(const char *action);
@@ -703,7 +717,7 @@ extern int audit_log_acct_message(int audit_fd, int type, const char *pgname,
         const char *host, const char *addr, const char *tty, int result);
 extern int audit_log_user_avc_message(int audit_fd, int type,
 	const char *message, const char *hostname, const char *addr,
-	const char *tty, uid_t uid);
+	const char *tty, uid_t auid);
 extern int audit_log_semanage_message(int audit_fd, int type,
 	const char *pgname, const char *op, const char *name, unsigned int id,
         const char *new_seuser, const char *new_role, const char *new_range,
@@ -720,6 +734,9 @@ extern struct audit_rule_data *audit_rule_create_data(void);
 extern void audit_rule_init_data(struct audit_rule_data *rule);
 extern int audit_rule_syscallbyname_data(struct audit_rule_data *rule,
                                           const char *scall);
+extern int audit_rule_io_uringbyname_data(struct audit_rule_data *rule,
+                                          const char *scall);
+
 /* Note that the following function takes a **, where audit_rule_fieldpair()
  * takes just a *.  That structure may need to be reallocated as a result of
  * adding new fields */

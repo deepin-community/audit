@@ -104,7 +104,8 @@ void write_logging_state(FILE *f)
 		int rc;
 		struct statfs buf;
 
-		fprintf(f, "current log size = %lu KB\n", log_size/1024);
+		fprintf(f, "current log size = %llu KB\n",
+			(long long unsigned)log_size/1024);
 		fprintf(f, "max log size = %lu KB\n",
 				config->max_log_size * (MEGABYTE/1024));
 		fprintf(f,"logs detected last rotate/shift = %u\n", known_logs);
@@ -112,7 +113,8 @@ void write_logging_state(FILE *f)
 					fs_space_left ? "yes" : "no");
 		rc = fstatfs(log_fd, &buf);
 		if (rc == 0) {
-			fprintf(f, "Logging partition free space %lu MB\n",
+			fprintf(f, "Logging partition free space %llu MB\n",
+				(long long unsigned)
 				(buf.f_bavail * buf.f_bsize)/MEGABYTE);
 			fprintf(f, "space_left setting %lu MB\n",
 				config->space_left);
@@ -874,13 +876,15 @@ static void do_space_left_action(int admin)
 			break;
 		case FA_SINGLE:
 			audit_msg(LOG_ALERT,
-				"The audit daemon is now changing the system to single user mode");
+				"The audit daemon is now changing the system to single user mode and exiting due to low disk space");
 			change_runlevel(SINGLE);
+			stop = 1;
 			break;
 		case FA_HALT:
 			audit_msg(LOG_ALERT,
-				"The audit daemon is now halting the system");
+				"The audit daemon is now halting the system and exiting due to low disk space");
 			change_runlevel(HALT);
+			stop = 1;
 			break;
 		default:
 			audit_msg(LOG_ALERT,
@@ -929,13 +933,15 @@ static void do_disk_full_action(void)
 			break;
 		case FA_SINGLE:
 			audit_msg(LOG_ALERT,
-				"The audit daemon is now changing the system to single user mode due to no space left on logging partition");
+				"The audit daemon is now changing the system to single user mode and exiting due to no space left on logging partition");
 			change_runlevel(SINGLE);
+			stop = 1;
 			break;
 		case FA_HALT:
 			audit_msg(LOG_ALERT,
-				"The audit daemon is now halting the system due to no space left on logging partition");
+				"The audit daemon is now halting the system and exiting due to no space left on logging partition");
 			change_runlevel(HALT);
+			stop = 1;
 			break;
 		default:
 			audit_msg(LOG_ALERT, "Unknown disk full action requested");
@@ -984,13 +990,15 @@ static void do_disk_error_action(const char *func, int err)
 			break;
 		case FA_SINGLE:
 			audit_msg(LOG_ALERT,
-				"The audit daemon is now changing the system to single user mode due to previously mentioned write error");
+				"The audit daemon is now changing the system to single user mode and exiting due to previously mentioned write error");
 			change_runlevel(SINGLE);
+			stop = 1;
 			break;
 		case FA_HALT:
 			audit_msg(LOG_ALERT,
-				"The audit daemon is now halting the system due to previously mentioned write error.");
+				"The audit daemon is now halting the system and exiting due to previously mentioned write error.");
 			change_runlevel(HALT);
+			stop = 1;
 			break;
 		default:
 			audit_msg(LOG_ALERT,
@@ -1107,9 +1115,11 @@ static void rotate_logs(unsigned int num_logs, unsigned int keep_logs)
 			"rotating log file (%s)", strerror(errno));
 		}
 	}
-	if (log_file)
+	if (log_file) {
+		log_fd = -1;
 		fclose(log_file);
-	log_file = NULL;
+		log_file = NULL;
+	}
 
 	/* Rotate */
 	len = strlen(config->log_file) + 16;
@@ -1415,12 +1425,10 @@ static void reconfigure(struct auditd_event *e)
 
 	// priority boost
 	if (oconf->priority_boost != nconf->priority_boost) {
-		int rc;
-
 		oconf->priority_boost = nconf->priority_boost;
 		errno = 0;
-		rc = nice(-oconf->priority_boost);
-		if (rc == -1 && errno)
+		nice(-oconf->priority_boost);
+		if (errno)
 			audit_msg(LOG_WARNING, "Cannot change priority in "
 					"reconfigure (%s)", strerror(errno));
 	}
@@ -1634,11 +1642,12 @@ static void reconfigure(struct auditd_event *e)
 	srand(time(NULL));
 	seq_num = rand()%10000;
 	if (gettimeofday(&tv, NULL) == 0) {
-		snprintf(date, sizeof(date), "audit(%lu.%03u:%u)", tv.tv_sec,
-			(unsigned)(tv.tv_usec/1000), seq_num);
+		snprintf(date, sizeof(date), "audit(%lld.%03u:%u)",
+			 (long long int)tv.tv_sec, (unsigned)(tv.tv_usec/1000),
+			 seq_num);
 	} else {
 		snprintf(date, sizeof(date),
-			"audit(%lu.%03d:%u)", (unsigned long)time(NULL),
+			"audit(%lld.%03d:%u)", (long long int)time(NULL),
 			 0, seq_num);
         }
 

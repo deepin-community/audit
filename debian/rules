@@ -46,6 +46,7 @@ debian/config-python-stamp:
 		--with-apparmor \
 		--with-libwrap \
 		--with-libcap-ng \
+		--with-io_uring \
 		$(CONFIGURE_FLAGS) \
 		--with-arm --with-aarch64 ${EXTRA_ARCH_TABLE}
 	touch $@
