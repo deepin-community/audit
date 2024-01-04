@@ -1,11 +1,11 @@
 /* audispd-pconfig.c --
- * Copyright 2007,2010,2015,2021 Red Hat Inc.
+ * Copyright 2007,2010,2015,2021-23 Red Hat Inc.
  * All Rights Reserved.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * This software may be freely redistributed and/or modified under the
+ * terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 2, or (at your option) any
+ * later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -13,8 +13,9 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * along with this program; see the file COPYING. If not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor
+ * Boston, MA 02110-1335, USA.
  *
  * Authors:
  *   Steve Grubb <sgrubb@redhat.com>
@@ -378,6 +379,7 @@ static int direction_parser(struct nv_pair *nv, int line,
 	return 1;
 }
 
+static const char *BUILTIN_PATH="/sbin/audisp-af_unix";
 static int path_parser(struct nv_pair *nv, int line,
 	plugin_conf_t *config)
 {
@@ -389,7 +391,10 @@ static int path_parser(struct nv_pair *nv, int line,
 	}
 
 	if (strncasecmp(nv->value, "builtin_", 8) == 0) {
-		config->path = strdup(nv->value);
+		audit_msg(LOG_WARNING,
+			  "Option %s line %d is obsolete - using %s",
+			  nv->value, line, BUILTIN_PATH);
+		config->path = strdup(BUILTIN_PATH);
 		return 0;
 	}
 
@@ -421,6 +426,11 @@ static int service_type_parser(struct nv_pair *nv, int line,
 	for (i=0; service_type[i].name != NULL; i++) {
 		if (strcasecmp(nv->value, service_type[i].name) == 0) {
 			config->type = service_type[i].option;
+			if (config->type == S_BUILTIN) {
+				audit_msg(LOG_WARNING,
+		"Option %s line %d is obsolete - update it", nv->value, line);
+				config->type = S_ALWAYS;
+			}
 			return 0;
 		}
 	}

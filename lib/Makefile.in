@@ -124,7 +124,7 @@ noinst_PROGRAMS = gen_actiontabs_h$(EXEEXT) gen_errtabs_h$(EXEEXT) \
 	gen_msg_typetabs_h$(EXEEXT) gen_optabs_h$(EXEEXT) \
 	gen_ppc_tables_h$(EXEEXT) gen_s390_tables_h$(EXEEXT) \
 	gen_s390x_tables_h$(EXEEXT) gen_x86_64_tables_h$(EXEEXT) \
-	$(am__EXEEXT_1) $(am__EXEEXT_2)
+	gen_uringop_tables_h$(EXEEXT) $(am__EXEEXT_1) $(am__EXEEXT_2)
 @USE_ARM_TRUE@am__append_3 = gen_arm_tables_h
 @USE_AARCH64_TRUE@am__append_4 = gen_aarch64_tables_h
 subdir = lib
@@ -300,6 +300,14 @@ gen_s390x_tables_h_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
 	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
 	$(gen_s390x_tables_h_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
 	$(LDFLAGS) -o $@
+am_gen_uringop_tables_h_OBJECTS =  \
+	gen_uringop_tables_h-gen_tables.$(OBJEXT)
+gen_uringop_tables_h_OBJECTS = $(am_gen_uringop_tables_h_OBJECTS)
+gen_uringop_tables_h_LDADD = $(LDADD)
+gen_uringop_tables_h_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CC \
+	$(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=link $(CCLD) \
+	$(gen_uringop_tables_h_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 am_gen_x86_64_tables_h_OBJECTS =  \
 	gen_x86_64_tables_h-gen_tables.$(OBJEXT)
 gen_x86_64_tables_h_OBJECTS = $(am_gen_x86_64_tables_h_OBJECTS)
@@ -340,6 +348,7 @@ am__depfiles_remade = ./$(DEPDIR)/audit_logging.Plo \
 	./$(DEPDIR)/gen_ppc_tables_h-gen_tables.Po \
 	./$(DEPDIR)/gen_s390_tables_h-gen_tables.Po \
 	./$(DEPDIR)/gen_s390x_tables_h-gen_tables.Po \
+	./$(DEPDIR)/gen_uringop_tables_h-gen_tables.Po \
 	./$(DEPDIR)/gen_x86_64_tables_h-gen_tables.Po \
 	./$(DEPDIR)/libaudit.Plo ./$(DEPDIR)/lookup_table.Plo \
 	./$(DEPDIR)/message.Plo ./$(DEPDIR)/netlink.Plo
@@ -370,7 +379,8 @@ SOURCES = $(libaudit_la_SOURCES) $(nodist_libaudit_la_SOURCES) \
 	$(gen_i386_tables_h_SOURCES) $(gen_machinetabs_h_SOURCES) \
 	$(gen_msg_typetabs_h_SOURCES) $(gen_optabs_h_SOURCES) \
 	$(gen_ppc_tables_h_SOURCES) $(gen_s390_tables_h_SOURCES) \
-	$(gen_s390x_tables_h_SOURCES) $(gen_x86_64_tables_h_SOURCES)
+	$(gen_s390x_tables_h_SOURCES) $(gen_uringop_tables_h_SOURCES) \
+	$(gen_x86_64_tables_h_SOURCES)
 DIST_SOURCES = $(libaudit_la_SOURCES) \
 	$(am__gen_aarch64_tables_h_SOURCES_DIST) \
 	$(gen_actiontabs_h_SOURCES) \
@@ -380,7 +390,8 @@ DIST_SOURCES = $(libaudit_la_SOURCES) \
 	$(gen_i386_tables_h_SOURCES) $(gen_machinetabs_h_SOURCES) \
 	$(gen_msg_typetabs_h_SOURCES) $(gen_optabs_h_SOURCES) \
 	$(gen_ppc_tables_h_SOURCES) $(gen_s390_tables_h_SOURCES) \
-	$(gen_s390x_tables_h_SOURCES) $(gen_x86_64_tables_h_SOURCES)
+	$(gen_s390x_tables_h_SOURCES) $(gen_uringop_tables_h_SOURCES) \
+	$(gen_x86_64_tables_h_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive cscopelist-recursive \
 	ctags-recursive dvi-recursive html-recursive info-recursive \
 	install-data-recursive install-dvi-recursive \
@@ -461,6 +472,7 @@ AWK = @AWK@
 BUILD_EXEEXT = @BUILD_EXEEXT@
 BUILD_OBJEXT = @BUILD_OBJEXT@
 CAPNG_LDADD = @CAPNG_LDADD@
+CAPNG_PKG = @CAPNG_PKG@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CC_FOR_BUILD = @CC_FOR_BUILD@
@@ -541,6 +553,7 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SWIG = @SWIG@
 VERSION = @VERSION@
 WFLAGS = @WFLAGS@
 abs_builddir = @abs_builddir@
@@ -633,7 +646,8 @@ nodist_libaudit_la_SOURCES = $(BUILT_SOURCES)
 BUILT_SOURCES = actiontabs.h errtabs.h fieldtabs.h flagtabs.h \
 	fstypetabs.h ftypetabs.h i386_tables.h machinetabs.h \
 	msg_typetabs.h optabs.h ppc_tables.h s390_tables.h \
-	s390x_tables.h x86_64_tables.h $(am__append_1) $(am__append_2)
+	s390x_tables.h x86_64_tables.h uringop_tables.h \
+	$(am__append_1) $(am__append_2)
 gen_actiontabs_h_SOURCES = gen_tables.c gen_tables.h actiontab.h
 gen_actiontabs_h_CFLAGS = '-DTABLE_H="actiontab.h"'
 @USE_ARM_TRUE@gen_arm_tables_h_SOURCES = gen_tables.c gen_tables.h arm_table.h
@@ -664,6 +678,8 @@ gen_s390_tables_h_SOURCES = gen_tables.c gen_tables.h s390_table.h
 gen_s390_tables_h_CFLAGS = '-DTABLE_H="s390_table.h"'
 gen_s390x_tables_h_SOURCES = gen_tables.c gen_tables.h s390x_table.h
 gen_s390x_tables_h_CFLAGS = '-DTABLE_H="s390x_table.h"'
+gen_uringop_tables_h_SOURCES = gen_tables.c gen_tables.h uringop_table.h
+gen_uringop_tables_h_CFLAGS = '-DTABLE_H="uringop_table.h"'
 gen_x86_64_tables_h_SOURCES = gen_tables.c gen_tables.h x86_64_table.h
 gen_x86_64_tables_h_CFLAGS = '-DTABLE_H="x86_64_table.h"'
 all: $(BUILT_SOURCES)
@@ -810,6 +826,10 @@ gen_s390x_tables_h$(EXEEXT): $(gen_s390x_tables_h_OBJECTS) $(gen_s390x_tables_h_
 	@rm -f gen_s390x_tables_h$(EXEEXT)
 	$(AM_V_CCLD)$(gen_s390x_tables_h_LINK) $(gen_s390x_tables_h_OBJECTS) $(gen_s390x_tables_h_LDADD) $(LIBS)
 
+gen_uringop_tables_h$(EXEEXT): $(gen_uringop_tables_h_OBJECTS) $(gen_uringop_tables_h_DEPENDENCIES) $(EXTRA_gen_uringop_tables_h_DEPENDENCIES) 
+	@rm -f gen_uringop_tables_h$(EXEEXT)
+	$(AM_V_CCLD)$(gen_uringop_tables_h_LINK) $(gen_uringop_tables_h_OBJECTS) $(gen_uringop_tables_h_LDADD) $(LIBS)
+
 gen_x86_64_tables_h$(EXEEXT): $(gen_x86_64_tables_h_OBJECTS) $(gen_x86_64_tables_h_DEPENDENCIES) $(EXTRA_gen_x86_64_tables_h_DEPENDENCIES) 
 	@rm -f gen_x86_64_tables_h$(EXEEXT)
 	$(AM_V_CCLD)$(gen_x86_64_tables_h_LINK) $(gen_x86_64_tables_h_OBJECTS) $(gen_x86_64_tables_h_LDADD) $(LIBS)
@@ -837,6 +857,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gen_ppc_tables_h-gen_tables.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gen_s390_tables_h-gen_tables.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gen_s390x_tables_h-gen_tables.Po@am__quote@ # am--include-marker
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gen_uringop_tables_h-gen_tables.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gen_x86_64_tables_h-gen_tables.Po@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libaudit.Plo@am__quote@ # am--include-marker
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/lookup_table.Plo@am__quote@ # am--include-marker
@@ -1079,6 +1100,20 @@ gen_s390x_tables_h-gen_tables.obj: gen_tables.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gen_tables.c' object='gen_s390x_tables_h-gen_tables.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gen_s390x_tables_h_CFLAGS) $(CFLAGS) -c -o gen_s390x_tables_h-gen_tables.obj `if test -f 'gen_tables.c'; then $(CYGPATH_W) 'gen_tables.c'; else $(CYGPATH_W) '$(srcdir)/gen_tables.c'; fi`
+
+gen_uringop_tables_h-gen_tables.o: gen_tables.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gen_uringop_tables_h_CFLAGS) $(CFLAGS) -MT gen_uringop_tables_h-gen_tables.o -MD -MP -MF $(DEPDIR)/gen_uringop_tables_h-gen_tables.Tpo -c -o gen_uringop_tables_h-gen_tables.o `test -f 'gen_tables.c' || echo '$(srcdir)/'`gen_tables.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gen_uringop_tables_h-gen_tables.Tpo $(DEPDIR)/gen_uringop_tables_h-gen_tables.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gen_tables.c' object='gen_uringop_tables_h-gen_tables.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gen_uringop_tables_h_CFLAGS) $(CFLAGS) -c -o gen_uringop_tables_h-gen_tables.o `test -f 'gen_tables.c' || echo '$(srcdir)/'`gen_tables.c
+
+gen_uringop_tables_h-gen_tables.obj: gen_tables.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gen_uringop_tables_h_CFLAGS) $(CFLAGS) -MT gen_uringop_tables_h-gen_tables.obj -MD -MP -MF $(DEPDIR)/gen_uringop_tables_h-gen_tables.Tpo -c -o gen_uringop_tables_h-gen_tables.obj `if test -f 'gen_tables.c'; then $(CYGPATH_W) 'gen_tables.c'; else $(CYGPATH_W) '$(srcdir)/gen_tables.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gen_uringop_tables_h-gen_tables.Tpo $(DEPDIR)/gen_uringop_tables_h-gen_tables.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gen_tables.c' object='gen_uringop_tables_h-gen_tables.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gen_uringop_tables_h_CFLAGS) $(CFLAGS) -c -o gen_uringop_tables_h-gen_tables.obj `if test -f 'gen_tables.c'; then $(CYGPATH_W) 'gen_tables.c'; else $(CYGPATH_W) '$(srcdir)/gen_tables.c'; fi`
 
 gen_x86_64_tables_h-gen_tables.o: gen_tables.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gen_x86_64_tables_h_CFLAGS) $(CFLAGS) -MT gen_x86_64_tables_h-gen_tables.o -MD -MP -MF $(DEPDIR)/gen_x86_64_tables_h-gen_tables.Tpo -c -o gen_x86_64_tables_h-gen_tables.o `test -f 'gen_tables.c' || echo '$(srcdir)/'`gen_tables.c
@@ -1365,6 +1400,7 @@ distclean: distclean-recursive
 	-rm -f ./$(DEPDIR)/gen_ppc_tables_h-gen_tables.Po
 	-rm -f ./$(DEPDIR)/gen_s390_tables_h-gen_tables.Po
 	-rm -f ./$(DEPDIR)/gen_s390x_tables_h-gen_tables.Po
+	-rm -f ./$(DEPDIR)/gen_uringop_tables_h-gen_tables.Po
 	-rm -f ./$(DEPDIR)/gen_x86_64_tables_h-gen_tables.Po
 	-rm -f ./$(DEPDIR)/libaudit.Plo
 	-rm -f ./$(DEPDIR)/lookup_table.Plo
@@ -1432,6 +1468,7 @@ maintainer-clean: maintainer-clean-recursive
 	-rm -f ./$(DEPDIR)/gen_ppc_tables_h-gen_tables.Po
 	-rm -f ./$(DEPDIR)/gen_s390_tables_h-gen_tables.Po
 	-rm -f ./$(DEPDIR)/gen_s390x_tables_h-gen_tables.Po
+	-rm -f ./$(DEPDIR)/gen_uringop_tables_h-gen_tables.Po
 	-rm -f ./$(DEPDIR)/gen_x86_64_tables_h-gen_tables.Po
 	-rm -f ./$(DEPDIR)/libaudit.Plo
 	-rm -f ./$(DEPDIR)/lookup_table.Plo
@@ -1631,6 +1668,16 @@ gen_s390x_tables_h$(BUILD_EXEEXT): CPPFLAGS=$(CPPFLAGS_FOR_BUILD)
 gen_s390x_tables_h$(BUILD_EXEEXT): LDFLAGS=$(LDFLAGS_FOR_BUILD)
 s390x_tables.h: gen_s390x_tables_h Makefile
 	./gen_s390x_tables_h --lowercase --i2s --s2i s390x_syscall > $@
+$(gen_uringop_tables_h_OBJECTS): CC=$(CC_FOR_BUILD)
+$(gen_uringop_tables_h_OBJECTS): CFLAGS=$(CFLAGS_FOR_BUILD)
+$(gen_uringop_tables_h_OBJECTS): CPPFLAGS=$(CPPFLAGS_FOR_BUILD)
+$(gen_uringop_tables_h_OBJECTS): LDFLAGS=$(LDFLAGS_FOR_BUILD)
+gen_uringop_tables_h$(BUILD_EXEEXT): CC=$(CC_FOR_BUILD)
+gen_uringop_tables_h$(BUILD_EXEEXT): CFLAGS=$(CFLAGS_FOR_BUILD)
+gen_uringop_tables_h$(BUILD_EXEEXT): CPPFLAGS=$(CPPFLAGS_FOR_BUILD)
+gen_uringop_tables_h$(BUILD_EXEEXT): LDFLAGS=$(LDFLAGS_FOR_BUILD)
+uringop_tables.h: gen_uringop_tables_h Makefile
+	./gen_uringop_tables_h --lowercase --i2s --s2i uringop > $@
 $(gen_x86_64_tables_h_OBJECTS): CC=$(CC_FOR_BUILD)
 $(gen_x86_64_tables_h_OBJECTS): CFLAGS=$(CFLAGS_FOR_BUILD)
 $(gen_x86_64_tables_h_OBJECTS): CPPFLAGS=$(CPPFLAGS_FOR_BUILD)

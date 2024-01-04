@@ -1,2 +1,10 @@
 # These are already installed by dh_installexamples
 usr/share/audit/sample-rules/
+# la files
+lib/*/libaudit.la
+lib/*/libauparse.la
+usr/lib/python*/*-packages/_audit.la
+usr/lib/python*/*-packages/auparse.la
+# python caches
+usr/lib/python*/*-packages/__pycache__/
+usr/lib/python*/*-packages/__pycache__/

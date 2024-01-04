@@ -1,9 +1,8 @@
-
 Summary: User space tools for kernel auditing
 Name: audit
-Version: 3.0.9
+Version: 3.1.2
 Release: 1%{dist}
-License: GPLv2+
+License: GPL-2.0-or-later AND LGPL-2.0-or-later
 Group: System Environment/Daemons
 URL: http://people.redhat.com/sgrubb/audit/
 Source0: http://people.redhat.com/sgrubb/audit/%{name}-%{version}.tar.gz
@@ -93,8 +92,8 @@ behavior.
 %configure --sbindir=/sbin --libdir=/%{_lib} --with-python=no \
 	   --with-python3=yes \
 	   --enable-gssapi-krb5=yes --with-arm --with-aarch64 \
-	   --with-libcap-ng=yes --enable-zos-remote \
-	   --enable-systemd
+	   --with-libcap-ng=yes --without-golang --enable-zos-remote \
+	   --enable-systemd --enable-experimental --with-io_uring
 
 make CFLAGS="%{optflags}" %{?_smp_mflags}
 
@@ -130,7 +129,7 @@ touch -r ./audit.spec $RPM_BUILD_ROOT/etc/libaudit.conf
 touch -r ./audit.spec $RPM_BUILD_ROOT/usr/share/man/man5/libaudit.conf.5.gz
 
 %check
-make check
+make %{?_smp_mflags} check
 # Get rid of make files so that they don't get packaged.
 rm -f rules/Makefile*
 
@@ -164,7 +163,6 @@ fi
 %{_mandir}/man5/libaudit.conf.5.gz
 
 %files libs-devel
-%defattr(-,root,root,-)
 %doc contrib/plugin
 %{_libdir}/libaudit.so
 %{_libdir}/libauparse.so
@@ -194,7 +192,6 @@ fi
 %license COPYING
 %doc README ChangeLog rules init.d/auditd.cron
 %attr(755,root,root) %{_datadir}/%{name}
-%attr(644,root,root) %{_datadir}/%{name}/sample-rules/*
 %attr(644,root,root) %{_mandir}/man8/auditctl.8.gz
 %attr(644,root,root) %{_mandir}/man8/auditd.8.gz
 %attr(644,root,root) %{_mandir}/man8/aureport.8.gz
@@ -214,7 +211,7 @@ fi
 %attr(755,root,root) /sbin/ausearch
 %attr(755,root,root) /sbin/aureport
 %attr(750,root,root) /sbin/autrace
-%attr(750,root,root) /sbin/augenrules
+%attr(755,root,root) /sbin/augenrules
 %attr(755,root,root) %{_bindir}/aulast
 %attr(755,root,root) %{_bindir}/aulastlog
 %attr(755,root,root) %{_bindir}/ausyscall
@@ -247,17 +244,27 @@ fi
 %config(noreplace) %attr(640,root,root) /etc/audit/audisp-remote.conf
 %config(noreplace) %attr(640,root,root) /etc/audit/plugins.d/au-remote.conf
 %config(noreplace) %attr(640,root,root) /etc/audit/plugins.d/syslog.conf
+%config(noreplace) %attr(640,root,root) /etc/audit/audisp-statsd.conf
+%config(noreplace) %attr(640,root,root) /etc/audit/plugins.d/au-statsd.conf
+%config(noreplace) %attr(640,root,root) /etc/audit/ids.conf
+%config(noreplace) %attr(640,root,root) /etc/audit/plugins.d/audisp-ids.conf
+%config(noreplace) %attr(640,root,root) /etc/audit/plugins.d/af_unix.conf
+%attr(644,root,root) %{_datadir}/%{name}/ids-rules/*
 %attr(750,root,root) /sbin/audisp-remote
 %attr(750,root,root) /sbin/audisp-syslog
+%attr(750,root,root) /sbin/audisp-af_unix
+%attr(750,root,root) /sbin/audisp-ids
+%attr(750,root,root) /sbin/audisp-statsd
 %attr(700,root,root) %dir %{_var}/spool/audit
 %attr(644,root,root) %{_mandir}/man8/audispd-zos-remote.8.gz
 %attr(644,root,root) %{_mandir}/man5/zos-remote.conf.5.gz
 %attr(644,root,root) %{_mandir}/man5/audisp-remote.conf.5.gz
 %attr(644,root,root) %{_mandir}/man8/audisp-remote.8.gz
 %attr(644,root,root) %{_mandir}/man8/audisp-syslog.8.gz
+%attr(644,root,root) %{_mandir}/man8/audisp-af_unix.8.gz
 
 
 %changelog
-* Mon Aug 29 2022 Steve Grubb <sgrubb@redhat.com> 3.0.9-1
+* Thu Apr 27 2023 Steve Grubb <sgrubb@redhat.com> 3.1.2-1
 - New upstream release
 

@@ -15,7 +15,7 @@
 @SET_MAKE@
 
 # Makefile.am--
-# Copyright 2004-07,2012-13,2018 Red Hat Inc., Durham, North Carolina.
+# Copyright 2004-07,2012-13,2018 Red Hat Inc.
 # All Rights Reserved.
 #
 # This program is free software; you can redistribute it and/or modify
@@ -190,6 +190,7 @@ AWK = @AWK@
 BUILD_EXEEXT = @BUILD_EXEEXT@
 BUILD_OBJEXT = @BUILD_OBJEXT@
 CAPNG_LDADD = @CAPNG_LDADD@
+CAPNG_PKG = @CAPNG_PKG@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
 CC_FOR_BUILD = @CC_FOR_BUILD@
@@ -270,6 +271,7 @@ SED = @SED@
 SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
+SWIG = @SWIG@
 VERSION = @VERSION@
 WFLAGS = @WFLAGS@
 abs_builddir = @abs_builddir@
@@ -633,7 +635,7 @@ install-exec-hook:
 @ENABLE_SYSTEMD_TRUE@	$(INSTALL_SCRIPT) -D -m 750 ${srcdir}/auditd.condrestart ${DESTDIR}${legacydir}/condrestart
 @ENABLE_SYSTEMD_TRUE@	$(INSTALL_SCRIPT) -D -m 750 ${srcdir}/audit-functions ${DESTDIR}${libexecdir}
 @ENABLE_SYSTEMD_FALSE@	$(INSTALL_SCRIPT) -D ${srcdir}/auditd.init ${DESTDIR}${initdir}/auditd
-	chmod 0750 $(DESTDIR)$(sbindir)/augenrules
+	chmod 0755 $(DESTDIR)$(sbindir)/augenrules
 
 uninstall-hook:
 	rm ${DESTDIR}${sysconfdir}/${libconfig}

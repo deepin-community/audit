@@ -1,6 +1,6 @@
 /*
 * interpret.c - Lookup values to something more readable
-* Copyright (c) 2007-09,2011-16,2018-21 Red Hat Inc.
+* Copyright (c) 2007-09,2011-16,2018-21,2023 Red Hat Inc.
 * All Rights Reserved.
 *
 * This library is free software; you can redistribute it and/or
@@ -918,7 +918,7 @@ static char *path_norm(const char *name)
 			if (dest > rpath + 1)
 				while ((--dest)[-1] != '/');
 		} else {
-			if (dest[-1] != '/')
+			if (dest != working && dest[-1] != '/')
 				*dest++ = '/';
 
 			// If it will overflow, chop it at last component
@@ -939,23 +939,29 @@ static const char *print_escaped_ext(const idata *id)
 	if (id->cwd) {
 		char *str1 = NULL, *str2, *str3 = NULL, *out = NULL;
 		str2 = print_escaped(id->val);
+
 		if (!str2)
 			goto err_out;
 		if (*str2 != '/') {
+			// Glue the cwd and path together
 			str1 = print_escaped(id->cwd);
 			if (!str1)
 				goto err_out;
 			if (asprintf(&str3, "%s/%s", str1, str2) < 0)
 				goto err_out;
 		} else {
-			// Check in case /home/../etc/passwd
-			if (strstr(str2, "..") == NULL)
-				return str2;
-
+			// Normal looking string
 			str3 = str2;
 			str2 = NULL;
-			str1 = NULL;
 		}
+
+		// Check in case /home/../etc/passwd
+		if (strstr(str3, "..") == NULL) {
+			free(str1);
+			free(str2);
+			return str3; // Nope, just return the string
+		}
+
 		out = path_norm(str3);
 		if (!out) { // If there's an error, just return the original
 			free(str1);
@@ -1229,9 +1235,10 @@ static const char *print_sockaddr(const char *val)
         switch (saddr->sa_family) {
                 case AF_LOCAL:
 			if (slen < 4) {
-				rc = asprintf(&out,
-				    "{ saddr_fam=%s sockaddr len too short }",
-							str);
+				rc = asprintf(&out, "{ saddr_fam=%s %s }", str,
+				    slen == sizeof(saddr->sa_family) ?
+				    "unnamed socket" : // ignore sun_path
+				    "sockaddr len too short");
 				break;
 			} else {
                                 const struct sockaddr_un *un =
@@ -1490,15 +1497,15 @@ static const char *print_success(const char *val)
 		return strdup(val);
 }
 
-static const char *print_open_flags(const char *val)
+static const char *print_open_flags(const char *val, int base)
 {
 	size_t i;
-	unsigned int flags;
+	unsigned long flags;
 	int cnt = 0;
 	char *out, buf[sizeof(open_flag_strings)+OPEN_FLAG_NUM_ENTRIES+1];
 
 	errno = 0;
-	flags = strtoul(val, NULL, 16);
+	flags = strtoul(val, NULL, base);
         if (errno) {
 		if (asprintf(&out, "conversion error(%s)", val) < 0)
 			out = NULL;
@@ -2372,6 +2379,83 @@ static const char *print_openat2_resolve(const char *val)
 	return strdup(buf);
 }
 
+static const char *print_trust(const char *val)
+{
+	const char *out;
+
+	if (strcmp(val, "0") == 0)
+		out = strdup("no");
+	else if (strcmp(val, "1") == 0)
+		out = strdup("yes");
+	else
+		out = strdup("unknown");
+
+	return out;
+}
+
+// fan_type always preceeds fan_info
+static int last_type = 2;
+static const char *print_fan_type(const char *val)
+{
+	const char *out;
+
+	if (strcmp(val, "0") == 0) {
+		out = strdup("none");
+		last_type = 0;
+	} else if (strcmp(val, "1") == 0) {
+		out = strdup("rule_info");
+		last_type = 1;
+	} else {
+		out = strdup("unknown");
+		last_type = 2;
+	}
+
+	return out;
+}
+
+static const char *print_fan_info(const char *val)
+{
+	char *out;
+	if (last_type == 1) {
+		errno = 0;
+		unsigned long info = strtoul(val, NULL, 16);
+		if (errno) {
+			if (asprintf(&out, "conversion error(%s)", val) < 0)
+				out = NULL;
+			return out;
+		} else {
+			if (asprintf(&out, "%lu", info) < 0)
+				out = NULL;
+			return out;
+		}
+	} else
+		out = strdup(val);
+	return out;
+}
+
+/* This is in IMA audit events */
+static const char *print_errno(const char *val)
+{
+	char *out;
+	const char *err_name;
+	int err;
+
+	errno = 0;
+	err = strtoul(val, NULL, 10);
+	if (errno) {
+		if (asprintf(&out, "conversion error(%s)", val) < 0)
+			out = NULL;
+		return out;
+	}
+	err_name = audit_errno_to_name(err);
+	if (err_name == NULL)
+		out = strdup("UNKNOWN");
+	else
+		out = strdup(err_name);
+
+	return out;
+}
+
 static const char *print_a0(const char *val, const idata *id)
 {
 	char *out;
@@ -2504,10 +2588,10 @@ static const char *print_a1(const char *val, const idata *id)
 			else if (strcmp(sys, "mknod") == 0)
 				return print_mode(val, 16);
 			else if (strcmp(sys, "mq_open") == 0)
-				return print_open_flags(val);
+				return print_open_flags(val, 16);
 		}
 		else if (strcmp(sys, "open") == 0)
-			return print_open_flags(val);
+			return print_open_flags(val, 16);
 		else if (strcmp(sys, "access") == 0)
 			return print_access(val);
 		else if (strcmp(sys, "epoll_ctl") == 0)
@@ -2581,11 +2665,11 @@ static const char *print_a2(const char *val, const idata *id)
 				goto normal;
 		} else if (*sys == 'o') {
 			if (strcmp(sys, "openat") == 0)
-				return print_open_flags(val);
+				return print_open_flags(val, 16);
 			if ((strcmp(sys, "open") == 0) && (id->a1 & O_CREAT))
 				return print_mode_short(val, 16);
 			if (strcmp(sys, "open_by_handle_at") == 0)
-			    return print_open_flags(val);
+			    return print_open_flags(val, 16);
 		} else if (*sys == 'f') {
 			if (strcmp(sys, "fchmodat") == 0)
 				return print_mode_short(val, 16);
@@ -3256,8 +3340,8 @@ unknown:
 		case AUPARSE_TYPE_SECCOMP:
 			out = print_seccomp_code(id->val);
 			break;
-		case AUPARSE_TYPE_OFLAG:
-			out = print_open_flags(id->val);
+		case AUPARSE_TYPE_OFLAG: // AUDIT_OPENAT2,MQ_OPEN
+			out = print_open_flags(id->val, 0);
 			break;
 		case AUPARSE_TYPE_MMAP:
 			out = print_mmap(id->val);
@@ -3285,6 +3369,18 @@ unknown:
 			break;
 		case AUPARSE_TYPE_RESOLVE:
 			out = print_openat2_resolve(id->val);
+			break;
+		case AUPARSE_TYPE_TRUST:
+			out = print_trust(id->val);
+			break;
+		case AUPARSE_TYPE_FAN_TYPE:
+			out = print_fan_type(id->val);
+			break;
+		case AUPARSE_TYPE_FAN_INFO:
+			out = print_fan_info(id->val);
+			break;
+		case AUPARSE_TYPE_ERRNO:
+			out = print_errno(id->val);
 			break;
 		case AUPARSE_TYPE_MAC_LABEL:
 		case AUPARSE_TYPE_UNCLASSIFIED:
@@ -3338,8 +3434,23 @@ unknown:
 				// Its here just in the off chance someone
 				// actually put a control character in a key.
 				char *dest = malloc(len + 1 + (3*cnt));
-				if (dest)
-					key_escape(out, dest, escape_mode);
+				if (dest) {
+					// Because need_escaping was called
+					// terminated, we need to do the same
+					// incase there's a Ctl-A in the key.
+					// This is likely fuzzer induced.
+					char tmp;
+					str = strchr(out, AUDIT_KEY_SEPARATOR);
+					if (str) {
+						tmp = *str;
+						*str = 0;
+						key_escape(out, dest,
+							   escape_mode);
+						*str = tmp;
+					} else
+						key_escape(out, dest,
+							   escape_mode);
+				}
 				free((void *)out);
 				out = dest;
 			}

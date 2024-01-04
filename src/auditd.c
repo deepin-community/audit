@@ -312,12 +312,13 @@ int send_audit_event(int type, const char *str)
 	// Write event into netlink area like normal events
 	if (gettimeofday(&tv, NULL) == 0) {
 		e->reply.len = snprintf((char *)e->reply.msg.data,
-			DMSG_SIZE, "audit(%lu.%03u:%u): %s", 
-			tv.tv_sec, (unsigned)(tv.tv_usec/1000), seq_num, str);
+			DMSG_SIZE, "audit(%lld.%03u:%u): %s",
+			(long long int)tv.tv_sec, (unsigned)(tv.tv_usec/1000),
+			seq_num, str);
 	} else {
 		e->reply.len = snprintf((char *)e->reply.msg.data,
-			DMSG_SIZE, "audit(%lu.%03d:%u): %s", 
-			(unsigned long)time(NULL), 0, seq_num, str);
+			DMSG_SIZE, "audit(%lld.%03d:%u): %s",
+			(long long int)time(NULL), 0, seq_num, str);
 	}
 	// Point message at the netlink buffer like normal events
 	e->reply.message = e->reply.msg.data;
@@ -722,8 +723,8 @@ int main(int argc, char *argv[])
 
 	if (config.priority_boost != 0) {
 		errno = 0;
-		rc = nice((int)-config.priority_boost);
-		if (rc == -1 && errno) {
+		nice((int)-config.priority_boost);
+		if (errno) {
 			audit_msg(LOG_ERR, "Cannot change priority (%s)", 
 					strerror(errno));
 			free_config(&config);
@@ -989,6 +990,7 @@ int main(int argc, char *argv[])
 	ev_signal_stop (loop, &sigusr1_watcher);
 	ev_signal_stop (loop, &sigusr2_watcher);
 	ev_signal_stop (loop, &sigterm_watcher);
+	ev_signal_stop (loop, &sigcont_watcher);
 
 	/* Write message to log that we are going down */
 	rc = audit_request_signal_info(fd);

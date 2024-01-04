@@ -4,6 +4,7 @@ etc/audit/plugins.d/af_unix.conf
 etc/audit/plugins.d/syslog.conf
 etc/audit/rules.d/audit.rules
 init.d/auditd.service lib/systemd/system
+sbin/audisp-af_unix
 sbin/audisp-syslog
 sbin/auditctl
 sbin/auditd
@@ -19,6 +20,7 @@ usr/share/man/man5/auditd-plugins.5
 usr/share/man/man5/auditd.conf.5
 usr/share/man/man5/ausearch-expression.5
 usr/share/man/man7/audit.rules.7
+usr/share/man/man8/audisp-af_unix.8
 usr/share/man/man8/audisp-syslog.8
 usr/share/man/man8/auditctl.8
 usr/share/man/man8/auditd.8
