@@ -39,8 +39,7 @@ debian/config-python-stamp:
 # We should also have "--with-golang" but it's not available in all arch and
 # the golang binding package is arch:all anyway.
 	dh_auto_configure -- \
-		--sbindir=/sbin \
-		--libdir=/lib/${DEB_HOST_MULTIARCH} \
+		--libdir=/usr/lib/${DEB_HOST_MULTIARCH} \
 		--enable-shared=audit \
 		--enable-gssapi-krb5 \
 		--with-apparmor \
@@ -86,32 +85,9 @@ override_dh_auto_install: debian/install-python-stamp $(PY3VERS:%=debian/install
 	$(RM) debian/tmp/etc/rc.d/init.d/auditd
 	$(RM) debian/tmp/etc/sysconfig/auditd
 
-	# Move the development library to /usr/lib
-	$(RM) debian/tmp/lib/${DEB_HOST_MULTIARCH}/libaudit.so
-	$(RM) debian/tmp/lib/${DEB_HOST_MULTIARCH}/libauparse.so
-
 	# Install the default configuration
 	install -o root -g root -m 0750 -d debian/tmp/etc/audit/rules.d/
 	install -o root -g root -m 0640 rules/10-base-config.rules debian/tmp/etc/audit/rules.d/audit.rules
-
-	mkdir -p debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/
-
-	ln -s /lib/${DEB_HOST_MULTIARCH}/libaudit.so.1.0.0 \
-		debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/libaudit.so
-	ln -s /lib/${DEB_HOST_MULTIARCH}/libauparse.so.0.0.0 \
-		debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/libauparse.so
-
-	mv debian/tmp/lib/${DEB_HOST_MULTIARCH}/libaudit.a \
-		debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/libaudit.a
-	mv debian/tmp/lib/${DEB_HOST_MULTIARCH}/libauparse.a \
-		debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/libauparse.a
-
-	mkdir -p debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/
-
-	mv debian/tmp/lib/${DEB_HOST_MULTIARCH}/pkgconfig/audit.pc \
-		debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/audit.pc
-	mv debian/tmp/lib/${DEB_HOST_MULTIARCH}/pkgconfig/auparse.pc \
-		debian/tmp/usr/lib/${DEB_HOST_MULTIARCH}/pkgconfig/auparse.pc
 
 override_dh_installexamples:
 	dh_installexamples -XMakefile
@@ -125,10 +101,10 @@ override_dh_installinit:
 override_dh_fixperms-arch:
 	dh_fixperms -a
 	#chmod o-wx debian/auditd/usr/bin/aulastlog
-	#chmod o-wx debian/auditd/sbin/auditctl
-	#chmod o-wx debian/auditd/sbin/auditd
-	#chmod o-wx debian/auditd/sbin/autrace
-	#chmod 750 debian/auditd/sbin/audispd
+	#chmod o-wx debian/auditd/usr/sbin/auditctl
+	#chmod o-wx debian/auditd/usr/sbin/auditd
+	#chmod o-wx debian/auditd/usr/sbin/autrace
+	#chmod 750 debian/auditd/usr/sbin/audispd
 	chmod -R o-rwx debian/auditd/var/log/audit
 	chgrp adm debian/auditd/var/log/audit
 	chmod -R o-rwx debian/auditd/etc/audit debian/audispd-plugins/etc/audit

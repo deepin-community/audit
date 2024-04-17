@@ -3,15 +3,15 @@ etc/audit/auditd.conf
 etc/audit/plugins.d/af_unix.conf
 etc/audit/plugins.d/syslog.conf
 etc/audit/rules.d/audit.rules
-init.d/auditd.service lib/systemd/system
-sbin/audisp-af_unix
-sbin/audisp-syslog
-sbin/auditctl
-sbin/auditd
-sbin/augenrules
-sbin/aureport
-sbin/ausearch
-sbin/autrace
+init.d/auditd.service usr/lib/systemd/system
+usr/sbin/audisp-af_unix
+usr/sbin/audisp-syslog
+usr/sbin/auditctl
+usr/sbin/auditd
+usr/sbin/augenrules
+usr/sbin/aureport
+usr/sbin/ausearch
+usr/sbin/autrace
 usr/bin/aulast
 usr/bin/aulastlog
 usr/bin/ausyscall
