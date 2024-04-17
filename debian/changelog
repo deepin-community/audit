@@ -1,3 +1,11 @@
+audit (1:3.1.2-2) unstable; urgency=medium
+
+  [ Chris Hofstaedtler ]
+  * Install aliased files into canonical locations in /usr. (DEP17 M2)
+    (Closes: #1060167)
+
+ -- Laurent Bigonville <bigon@debian.org>  Wed, 24 Jan 2024 16:05:18 +0100
+
 audit (1:3.1.2-1) unstable; urgency=medium
 
   [ Christian Göttsche ]
