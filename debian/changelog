@@ -1,3 +1,9 @@
+audit (1:3.1.2-2deepin2) unstable; urgency=medium
+
+  * add DAC_add_nametype.patch
+
+ -- Liang Bo <liangbo@uniontech.com>  Thu, 05 Sep 2024 13:56:03 +0800
+
 audit (1:3.1.2-2deepin1) unstable; urgency=medium
 
   * add usec-audit-mac-patches.patch
