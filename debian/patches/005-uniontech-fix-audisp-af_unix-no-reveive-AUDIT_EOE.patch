@@ -1,0 +1,38 @@
+From bc051447716c4141e9b951c55cba4c6fba921092 Mon Sep 17 00:00:00 2001
+From: zhangya <zhangya@uniontech.com>
+Date: Wed, 11 Sep 2024 19:19:27 +0800
+Subject: [PATCH] audisp-af_unix无法接收到AUDIT_EOE消息
+
+---
+ auparse/auparse.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
+
+diff --git a/auparse/auparse.c b/auparse/auparse.c
+index 6f3fb94..9d83879 100644
+--- a/auparse/auparse.c
++++ b/auparse/auparse.c
+@@ -1636,13 +1636,14 @@ static int au_auparse_next_event(auparse_state_t *au)
+ 			free(l);
+ 			continue;
+ 		}
+-		// Eat standalone EOE - main event was already marked complete
+-		if (l->head->type == AUDIT_EOE) {
+-			au->cur_buf = NULL;
+-			aup_list_clear(l);
+-			free(l);
+-			continue;
+-		}
++		// 如果吃掉,audisp讲无法接收到AUDIT_EOE消息,这会导致消息处理有问题https://lists.linux-audit.osci.io/archives/list/linux-audit@lists.linux-audit.osci.io/thread/M24F7DOPPJKSVR4MVO34P2PP2HA5O5TZ/?sort=thread
++		// // Eat standalone EOE - main event was already marked complete
++		// if (l->head->type == AUDIT_EOE) {
++		// 	au->cur_buf = NULL;
++		// 	aup_list_clear(l);
++		// 	free(l);
++		// 	continue;
++		// }
+ 		if (au_lol_append(au->au_lo, l) == NULL) {
+ 			free((char *)e.host);
+ #ifdef	LOL_EVENTS_DEBUG01
+-- 
+2.20.1
+
