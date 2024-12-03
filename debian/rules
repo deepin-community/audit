@@ -95,6 +95,9 @@ override_dh_installexamples:
 override_dh_installlogrotate:
 	# auditd has a equivalent built-in feature
 
+override_dh_installsystemd:
+	dh_installsystemd --no-start --no-enable
+
 override_dh_installinit:
 	dh_installinit --restart-after-upgrade
 
