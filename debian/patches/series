@@ -5,3 +5,4 @@ usec-audit-mac-patches.patch
 DAC_add_nametype.patch
 005-uniontech-fix-audisp-af_unix-no-reveive-AUDIT_EOE.patch
 006-uniontech-add-mips-support.patch
+007-uniontech-add-loongarch-support.patch
