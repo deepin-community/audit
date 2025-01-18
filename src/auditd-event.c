@@ -36,6 +36,9 @@
 #include <limits.h>     /* POSIX_HOST_NAME_MAX */
 #include <ctype.h>	/* toupper */
 #include <libgen.h>	/* dirname */
+#ifdef HAVE_ATOMIC
+#include <stdatomic.h>
+#endif
 #include "auditd-event.h"
 #include "auditd-dispatch.h"
 #include "auditd-listen.h"
@@ -45,7 +48,7 @@
 #include "auparse-idata.h"
 
 /* This is defined in auditd.c */
-extern volatile int stop;
+extern volatile ATOMIC_INT stop;
 
 /* Local function prototypes */
 static void send_ack(const struct auditd_event *e, int ack_type,
@@ -92,6 +95,9 @@ static auparse_state_t *au = NULL;
 #define FORMAT_BUF_LEN (MAX_AUDIT_MESSAGE_LENGTH + _POSIX_HOST_NAME_MAX)
 #define MIN_SPACE_LEFT 24
 
+static inline int from_network(const struct auditd_event *e)
+{ if (e && e->ack_func) return 1; return 0; }
+
 int dispatch_network_events(void)
 {
 	return config->distribute_network_events;
@@ -113,12 +119,12 @@ void write_logging_state(FILE *f)
 					fs_space_left ? "yes" : "no");
 		rc = fstatfs(log_fd, &buf);
 		if (rc == 0) {
-			fprintf(f, "Logging partition free space %llu MB\n",
+			fprintf(f, "Logging partition free space = %llu MB\n",
 				(long long unsigned)
 				(buf.f_bavail * buf.f_bsize)/MEGABYTE);
-			fprintf(f, "space_left setting %lu MB\n",
+			fprintf(f, "space_left setting = %lu MB\n",
 				config->space_left);
-			fprintf(f, "admin_space_left setting %lu MB\n",
+			fprintf(f, "admin_space_left setting = %lu MB\n",
 				config->admin_space_left);
 		}
 		fprintf(f, "logging suspended = %s\n",
@@ -225,7 +231,7 @@ static void *flush_thread_main(void *arg)
 }
 
 /* We setup the flush thread no matter what. This is incase a reconfig
- * changes from non incremental to incremental or vise versa. */
+ * changes from non incremental to incremental or vice versa. */
 static void init_flush_thread(void)
 {
 	pthread_mutex_init(&flush_lock, NULL);
@@ -533,7 +539,7 @@ void enqueue_event(struct auditd_event *e)
 
 /* This function allocates memory and fills the event fields with
    passed arguments. Caller must free memory. */
-struct auditd_event *create_event(char *msg, ack_func_type ack_func,
+struct auditd_event *create_event(const char *msg, ack_func_type ack_func,
 	 void *ack_data, uint32_t sequence_id)
 {
 	struct auditd_event *e;
@@ -1009,6 +1015,9 @@ static void do_disk_error_action(const char *func, int err)
 
 static void rotate_logs_now(void)
 {
+	/* Don't rotate in debug mode */
+	if (config->daemonize == D_FOREGROUND)
+		return;
 	if (config->max_log_size_action == SZ_KEEP_LOGS)
 		shift_logs();
 	else
@@ -1066,8 +1075,12 @@ static void fix_disk_permissions(void)
 	// Start with the directory
 	strcpy(path, config->log_file);
 	dir = dirname(path);
-	chmod(dir, config->log_group ? S_IRWXU|S_IRGRP|S_IXGRP : S_IRWXU);
-	chown(dir, 0, config->log_group ? config->log_group : 0);
+	if (chmod(dir,config->log_group ? S_IRWXU|S_IRGRP|S_IXGRP: S_IRWXU) < 0)
+		audit_msg(LOG_WARNING, "Couldn't change access mode of "
+			"%s (%s)", dir, strerror(errno));
+	if (chown(dir, 0, config->log_group ? config->log_group : 0) < 0)
+		audit_msg(LOG_WARNING, "Couldn't change ownership of "
+			"%s (%s)", dir, strerror(errno));
 
 	// Now, for each file...
 	for (i = 1; i < config->num_logs; i++) {
@@ -1427,7 +1440,8 @@ static void reconfigure(struct auditd_event *e)
 	if (oconf->priority_boost != nconf->priority_boost) {
 		oconf->priority_boost = nconf->priority_boost;
 		errno = 0;
-		nice(-oconf->priority_boost);
+		if (nice(-oconf->priority_boost))
+			; /* Intentionally blank, we have to check errno */
 		if (errno)
 			audit_msg(LOG_WARNING, "Cannot change priority in "
 					"reconfigure (%s)", strerror(errno));

@@ -1,3 +1,45 @@
+4.0.2
+- Fix musl C builds
+- Many code cleanups (Yugend)
+- Use atomic variables if available for signal related flags
+- Dont rotate audit logs when auditd is in debug mode
+- Fix a couple memory leaks on error paths
+- Correct output when displaying rules with exe/path/dir (Attila Lakatos)
+- Fix auparse lookup test to not use the system libaupaurse
+- Improve auparse metrics
+- Update auparse normalizer for recent syscalls
+- Make status report uniform
+
+4.0.1
+- Update TRUSTED_APP interpretation to look for known fields
+- In auditd plugins, allow variable amount of arguments (Attila Lakatos)
+- Fix augenrules to work correctly when kernel is in immutable mode
+- Add ausearch_cur_event to auparse library (Attila Lakatos)
+- Add audisp-filter plugin (Attila Lakatos)
+- Improve sorting speed of aureport --summary reports
+- auditd & audit-rules.service pick up paths automatically (Laurent Bigonville)
+- Update auparse normalizer for new syscalls
+
+4.0
+- Drop python2 support
+- Drop auvirt and autrace programs
+- Drop SysVinit support
+- Require the use of the 5.0 or later kernel headers
+- New README.md file
+- Rewrite legacy service functions in terms of systemctl
+- Consolidate and update end of event detection to a common function
+- Split off rule loading from auditd.service into audit-rules.service
+- Refactor libaudit.h to split out logging functions and record numbers
+- Speed up aureport --summary reports
+- Limit libaudit python bindings to logging functions
+- Add a metrics function for auparse
+- Change auditctl to use pidfd_send_signal for signaling auditd
+- Adjust watches to optimize syscalls hooked when watch file access
+- Drop nispom rules
+- Add intepretations for fsconfig, fsopen, fsmount, & move_mount
+- Many code fixups (cgzones)
+- Update syscall and interpretation tables to the 6.8 kernel
+
 3.1.2
 - When processing a run level change, make auditd exit
 - In auditd, fix return code when rules added in immutable mode
@@ -15,7 +57,7 @@
 - Add user friendly keywords for signals to auditctl
 - In ausearch, parse up URINGOP and DM_CTRL records
 - Harden auparse to better handle corrupt logs
-- Fix a CFLAGS propogation problem in the common directory
+- Fix a CFLAGS propagation problem in the common directory
 - Move the audispd af_unix plugin to a standalone program
 
 3.1

@@ -5,6 +5,7 @@ libaudit.so.1 libaudit1 #MINVER#
  _audit_elf@Base 1:2.2.1
  _audit_exeadded@Base 1:2.5.1
  _audit_filterfsadded@Base 1:2.8
+ _audit_parse_syscall@Base 1:4.0.1
  _audit_permadded@Base 1:2.2.1
  _audit_syscalladded@Base 1:2.2.1
  audit_action_to_name@Base 1:2.2.1
@@ -68,7 +69,6 @@ libaudit.so.1 libaudit1 #MINVER#
  audit_rule_init_data@Base 1:3.0~alpha9
  audit_rule_interfield_comp_data@Base 1:2.2.1
  audit_rule_io_uringbyname_data@Base 1:3.1.1
- audit_rule_syscall_data@Base 1:2.2.1
  audit_rule_syscallbyname_data@Base 1:2.2.1
  audit_send@Base 1:2.2.1
  audit_set_backlog_limit@Base 1:2.2.1

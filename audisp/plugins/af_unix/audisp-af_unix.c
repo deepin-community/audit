@@ -126,7 +126,7 @@ int setup_socket(int argc, char *argv[])
 	} else {
 		int i;
 		for (i=1; i < 3; i++) {
-			if (isdigit(argv[i][0])) {
+			if (isdigit((unsigned char)argv[i][0])) {
 				errno = 0;
 				mode = strtoul(argv[i], NULL, 8);
 				if (errno) {
@@ -310,7 +310,8 @@ int main(int argc, char *argv[])
 #ifdef HAVE_LIBCAP_NG
 	// Drop capabilities
 	capng_clear(CAPNG_SELECT_BOTH);
-	capng_apply(CAPNG_SELECT_BOTH);
+	if (capng_apply(CAPNG_SELECT_BOTH))
+		syslog(LOG_WARNING, "audisp-af_unix plugin was unable to drop capabilities, continuing with elevated priviles");
 #endif
 	syslog(LOG_INFO, "audisp-af_unix plugin is listening for events");
 	event_loop(ifd);

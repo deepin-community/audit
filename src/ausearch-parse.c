@@ -719,6 +719,10 @@ static int common_path_parser(search_items *s, char *path)
 			// append
 			snode sn;
 			sn.str = strdup(path);
+			if (sn.str == NULL) {
+				fprintf(stderr, "Out of memory. Check %s file, %d line\n", __FILE__, __LINE__);
+				return 8;
+			}
 			sn.key = NULL;
 			sn.hits = 1;
 			// Attempt to rebuild path if relative
@@ -765,9 +769,11 @@ static int common_path_parser(search_items *s, char *path)
 			if ((sn.str[0] == '.') && ((sn.str[1] == '.') ||
 				(sn.str[1] == '/')) && s->cwd) {
 				char *tmp = malloc(PATH_MAX);
-				if (tmp == NULL)
+				if (tmp == NULL) {
+					free(sn.str);
 					return 6;
-				snprintf(tmp, PATH_MAX, "%s/%s", 
+				}
+				snprintf(tmp, PATH_MAX, "%s/%s",
 					s->cwd, sn.str);
 				free(sn.str);
 				sn.str = tmp;
@@ -1128,7 +1134,7 @@ try_again:
 				return 25;
 			ptr = str + 4;
 			term = ptr;
-			while (isdigit(*term))
+			while (isdigit((unsigned char)*term))
 				term++;
 			if (term == ptr)
 				return 14;
@@ -1217,6 +1223,10 @@ skip:
 			saved = *term;
 			*term = 0;
 			s->hostname = strdup(str);
+			if (s->hostname == NULL) {
+				fprintf(stderr, "Out of memory. Check %s file, %d line\n", __FILE__, __LINE__);
+				return 33;
+			}
 			*term = saved;
 
 			// Lets see if there is something more
@@ -1711,7 +1721,7 @@ static int parse_sockaddr(const lnode *n, search_items *s)
 				if (len != sizeof(saddr->sa_family) &&
 				    len < 4) {
 					fprintf(stderr,
-						"sun_path len too short (%d)\n",
+						"sun_path len too short (%u)\n",
 						len);
 					return 4;
 				}
@@ -2435,7 +2445,7 @@ static int parse_simple_message(const lnode *n, search_items *s)
 
 	// defaulting this to 1 for these messages. The kernel generally
 	// does not log the res since it can be nothing but success. 
-	// But it can still be overriden below if res= is found in the event
+	// But it can still be overridden below if res= is found in the event
 	if (n->type == AUDIT_CONFIG_CHANGE) 
 		s->success = S_SUCCESS;
 

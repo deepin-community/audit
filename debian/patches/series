@@ -1,9 +1,2 @@
 01-no-refusemanualstop.patch
-02-restorecon-path.patch
 03-Set-log_group-adm.patch
-usec-audit-mac-patches.patch
-DAC_add_nametype.patch
-005-uniontech-fix-audisp-af_unix-no-reveive-AUDIT_EOE.patch
-006-uniontech-add-mips-support.patch
-007-uniontech-add-loongarch-support.patch
-008_uniontech-audit_log_acct_message_add_acct_info.patch

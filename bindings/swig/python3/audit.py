@@ -528,274 +528,12 @@ AUDIT_VIRT_DESTROY = _audit.AUDIT_VIRT_DESTROY
 AUDIT_VIRT_MIGRATE_IN = _audit.AUDIT_VIRT_MIGRATE_IN
 AUDIT_VIRT_MIGRATE_OUT = _audit.AUDIT_VIRT_MIGRATE_OUT
 AUDIT_LAST_VIRT_MSG = _audit.AUDIT_LAST_VIRT_MSG
-AUDIT_KEY_SEPARATOR = _audit.AUDIT_KEY_SEPARATOR
-AUDIT_FILTER_MASK = _audit.AUDIT_FILTER_MASK
-AUDIT_FILTER_UNSET = _audit.AUDIT_FILTER_UNSET
-EM_ARM = _audit.EM_ARM
-EM_AARCH64 = _audit.EM_AARCH64
-AUDIT_INTERP_SEPARATOR = _audit.AUDIT_INTERP_SEPARATOR
-class audit_sig_info(object):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    __repr__ = _swig_repr
-    uid = property(_audit.audit_sig_info_uid_get, _audit.audit_sig_info_uid_set)
-    pid = property(_audit.audit_sig_info_pid_get, _audit.audit_sig_info_pid_set)
-    ctx = property(_audit.audit_sig_info_ctx_get, _audit.audit_sig_info_ctx_set)
-
-    def __init__(self):
-        _audit.audit_sig_info_swiginit(self, _audit.new_audit_sig_info())
-    __swig_destroy__ = _audit.delete_audit_sig_info
-
-# Register audit_sig_info in _audit:
-_audit.audit_sig_info_swigregister(audit_sig_info)
-MAX_AUDIT_MESSAGE_LENGTH = _audit.MAX_AUDIT_MESSAGE_LENGTH
-class audit_message(object):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    __repr__ = _swig_repr
-    nlh = property(_audit.audit_message_nlh_get, _audit.audit_message_nlh_set)
-    data = property(_audit.audit_message_data_get, _audit.audit_message_data_set)
-
-    def __init__(self):
-        _audit.audit_message_swiginit(self, _audit.new_audit_message())
-    __swig_destroy__ = _audit.delete_audit_message
-
-# Register audit_message in _audit:
-_audit.audit_message_swigregister(audit_message)
-class audit_reply(object):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    __repr__ = _swig_repr
-    type = property(_audit.audit_reply_type_get, _audit.audit_reply_type_set)
-    len = property(_audit.audit_reply_len_get, _audit.audit_reply_len_set)
-    nlh = property(_audit.audit_reply_nlh_get, _audit.audit_reply_nlh_set)
-    msg = property(_audit.audit_reply_msg_get, _audit.audit_reply_msg_set)
-    status = property(_audit.audit_reply_status_get, _audit.audit_reply_status_set)
-    ruledata = property(_audit.audit_reply_ruledata_get, _audit.audit_reply_ruledata_set)
-    login = property(_audit.audit_reply_login_get, _audit.audit_reply_login_set)
-    message = property(_audit.audit_reply_message_get, _audit.audit_reply_message_set)
-    error = property(_audit.audit_reply_error_get, _audit.audit_reply_error_set)
-    signal_info = property(_audit.audit_reply_signal_info_get, _audit.audit_reply_signal_info_set)
-    conf = property(_audit.audit_reply_conf_get, _audit.audit_reply_conf_set)
-    features = property(_audit.audit_reply_features_get, _audit.audit_reply_features_set)
-
-    def __init__(self):
-        _audit.audit_reply_swiginit(self, _audit.new_audit_reply())
-    __swig_destroy__ = _audit.delete_audit_reply
-
-# Register audit_reply in _audit:
-_audit.audit_reply_swigregister(audit_reply)
-class audit_dispatcher_header(object):
-    thisown = property(lambda x: x.this.own(), lambda x, v: x.this.own(v), doc="The membership flag")
-    __repr__ = _swig_repr
-    ver = property(_audit.audit_dispatcher_header_ver_get, _audit.audit_dispatcher_header_ver_set)
-    hlen = property(_audit.audit_dispatcher_header_hlen_get, _audit.audit_dispatcher_header_hlen_set)
-    type = property(_audit.audit_dispatcher_header_type_get, _audit.audit_dispatcher_header_type_set)
-    size = property(_audit.audit_dispatcher_header_size_get, _audit.audit_dispatcher_header_size_set)
-
-    def __init__(self):
-        _audit.audit_dispatcher_header_swiginit(self, _audit.new_audit_dispatcher_header())
-    __swig_destroy__ = _audit.delete_audit_dispatcher_header
-
-# Register audit_dispatcher_header in _audit:
-_audit.audit_dispatcher_header_swigregister(audit_dispatcher_header)
-AUDISP_PROTOCOL_VER = _audit.AUDISP_PROTOCOL_VER
-AUDISP_PROTOCOL_VER2 = _audit.AUDISP_PROTOCOL_VER2
-MACH_X86 = _audit.MACH_X86
-MACH_86_64 = _audit.MACH_86_64
-MACH_IA64 = _audit.MACH_IA64
-MACH_PPC64 = _audit.MACH_PPC64
-MACH_PPC = _audit.MACH_PPC
-MACH_S390X = _audit.MACH_S390X
-MACH_S390 = _audit.MACH_S390
-MACH_ALPHA = _audit.MACH_ALPHA
-MACH_ARM = _audit.MACH_ARM
-MACH_AARCH64 = _audit.MACH_AARCH64
-MACH_PPC64LE = _audit.MACH_PPC64LE
-MACH_IO_URING = _audit.MACH_IO_URING
-FAIL_IGNORE = _audit.FAIL_IGNORE
-FAIL_LOG = _audit.FAIL_LOG
-FAIL_TERMINATE = _audit.FAIL_TERMINATE
-MSG_STDERR = _audit.MSG_STDERR
-MSG_SYSLOG = _audit.MSG_SYSLOG
-MSG_QUIET = _audit.MSG_QUIET
-DBG_NO = _audit.DBG_NO
-DBG_YES = _audit.DBG_YES
-
-def set_aumessage_mode(mode, debug):
-    return _audit.set_aumessage_mode(mode, debug)
-GET_REPLY_BLOCKING = _audit.GET_REPLY_BLOCKING
-GET_REPLY_NONBLOCKING = _audit.GET_REPLY_NONBLOCKING
 
 def audit_open():
     return _audit.audit_open()
 
 def audit_close(fd):
     return _audit.audit_close(fd)
-
-def audit_get_reply(fd, rep, block, peek):
-    return _audit.audit_get_reply(fd, rep, block, peek)
-
-def audit_getloginuid():
-    return _audit.audit_getloginuid()
-
-def audit_setloginuid(uid):
-    return _audit.audit_setloginuid(uid)
-
-def audit_get_session():
-    return _audit.audit_get_session()
-
-def audit_detect_machine():
-    return _audit.audit_detect_machine()
-
-def audit_determine_machine(arch):
-    return _audit.audit_determine_machine(arch)
-
-def audit_format_signal_info(buf, len, op, rep, res):
-    return _audit.audit_format_signal_info(buf, len, op, rep, res)
-
-def audit_name_to_field(field):
-    return _audit.audit_name_to_field(field)
-
-def audit_field_to_name(field):
-    return _audit.audit_field_to_name(field)
-
-def audit_name_to_syscall(sc, machine):
-    return _audit.audit_name_to_syscall(sc, machine)
-
-def audit_syscall_to_name(sc, machine):
-    return _audit.audit_syscall_to_name(sc, machine)
-
-def audit_uringop_to_name(uringop):
-    return _audit.audit_uringop_to_name(uringop)
-
-def audit_name_to_uringop(uringop):
-    return _audit.audit_name_to_uringop(uringop)
-
-def audit_name_to_flag(flag):
-    return _audit.audit_name_to_flag(flag)
-
-def audit_flag_to_name(flag):
-    return _audit.audit_flag_to_name(flag)
-
-def audit_name_to_action(action):
-    return _audit.audit_name_to_action(action)
-
-def audit_action_to_name(action):
-    return _audit.audit_action_to_name(action)
-
-def audit_name_to_msg_type(msg_type):
-    return _audit.audit_name_to_msg_type(msg_type)
-
-def audit_msg_type_to_name(msg_type):
-    return _audit.audit_msg_type_to_name(msg_type)
-
-def audit_name_to_machine(machine):
-    return _audit.audit_name_to_machine(machine)
-
-def audit_machine_to_name(machine):
-    return _audit.audit_machine_to_name(machine)
-
-def audit_machine_to_elf(machine):
-    return _audit.audit_machine_to_elf(machine)
-
-def audit_elf_to_machine(elf):
-    return _audit.audit_elf_to_machine(elf)
-
-def audit_operator_to_symbol(op):
-    return _audit.audit_operator_to_symbol(op)
-
-def audit_name_to_errno(error):
-    return _audit.audit_name_to_errno(error)
-
-def audit_errno_to_name(error):
-    return _audit.audit_errno_to_name(error)
-
-def audit_name_to_ftype(name):
-    return _audit.audit_name_to_ftype(name)
-
-def audit_ftype_to_name(ftype):
-    return _audit.audit_ftype_to_name(ftype)
-
-def audit_name_to_fstype(name):
-    return _audit.audit_name_to_fstype(name)
-
-def audit_fstype_to_name(fstype):
-    return _audit.audit_fstype_to_name(fstype)
-
-def audit_number_to_errmsg(errnumber, opt):
-    return _audit.audit_number_to_errmsg(errnumber, opt)
-
-def audit_request_status(fd):
-    return _audit.audit_request_status(fd)
-
-def audit_is_enabled(fd):
-    return _audit.audit_is_enabled(fd)
-
-def get_auditfail_action(failmode):
-    return _audit.get_auditfail_action(failmode)
-
-def audit_request_features(fd):
-    return _audit.audit_request_features(fd)
-
-def audit_get_features():
-    return _audit.audit_get_features()
-WAIT_NO = _audit.WAIT_NO
-WAIT_YES = _audit.WAIT_YES
-
-def audit_set_pid(fd, pid, wmode):
-    return _audit.audit_set_pid(fd, pid, wmode)
-
-def audit_set_enabled(fd, enabled):
-    return _audit.audit_set_enabled(fd, enabled)
-
-def audit_set_failure(fd, failure):
-    return _audit.audit_set_failure(fd, failure)
-
-def audit_set_rate_limit(fd, limit):
-    return _audit.audit_set_rate_limit(fd, limit)
-
-def audit_set_backlog_limit(fd, limit):
-    return _audit.audit_set_backlog_limit(fd, limit)
-
-def audit_set_backlog_wait_time(fd, bwt):
-    return _audit.audit_set_backlog_wait_time(fd, bwt)
-
-def audit_reset_lost(fd):
-    return _audit.audit_reset_lost(fd)
-
-def audit_reset_backlog_wait_time_actual(fd):
-    return _audit.audit_reset_backlog_wait_time_actual(fd)
-
-def audit_set_feature(fd, feature, value, lock):
-    return _audit.audit_set_feature(fd, feature, value, lock)
-
-def audit_set_loginuid_immutable(fd):
-    return _audit.audit_set_loginuid_immutable(fd)
-
-def audit_request_rules_list_data(fd):
-    return _audit.audit_request_rules_list_data(fd)
-
-def audit_request_signal_info(fd):
-    return _audit.audit_request_signal_info(fd)
-
-def audit_update_watch_perms(rule, perms):
-    return _audit.audit_update_watch_perms(rule, perms)
-
-def audit_add_watch(rulep, path):
-    return _audit.audit_add_watch(rulep, path)
-
-def audit_add_watch_dir(type, rulep, path):
-    return _audit.audit_add_watch_dir(type, rulep, path)
-
-def audit_trim_subtrees(fd):
-    return _audit.audit_trim_subtrees(fd)
-
-def audit_make_equivalent(fd, mount_point, subtree):
-    return _audit.audit_make_equivalent(fd, mount_point, subtree)
-
-def audit_add_rule_data(fd, rule, flags, action):
-    return _audit.audit_add_rule_data(fd, rule, flags, action)
-
-def audit_delete_rule_data(fd, rule, flags, action):
-    return _audit.audit_delete_rule_data(fd, rule, flags, action)
 
 def audit_value_needs_encoding(str, size):
     return _audit.audit_value_needs_encoding(str, size)
@@ -824,33 +562,18 @@ def audit_log_semanage_message(audit_fd, type, pgname, op, name, id, new_seuser,
 def audit_log_user_command(audit_fd, type, command, tty, result):
     return _audit.audit_log_user_command(audit_fd, type, command, tty, result)
 
-def audit_rule_create_data():
-    return _audit.audit_rule_create_data()
+def audit_elf_to_machine(elf):
+    return _audit.audit_elf_to_machine(elf)
 
-def audit_rule_init_data(rule):
-    return _audit.audit_rule_init_data(rule)
+def audit_machine_to_name(machine):
+    return _audit.audit_machine_to_name(machine)
 
-def audit_rule_syscallbyname_data(rule, scall):
-    return _audit.audit_rule_syscallbyname_data(rule, scall)
+def audit_syscall_to_name(sc, machine):
+    return _audit.audit_syscall_to_name(sc, machine)
 
-def audit_rule_io_uringbyname_data(rule, scall):
-    return _audit.audit_rule_io_uringbyname_data(rule, scall)
+def audit_detect_machine():
+    return _audit.audit_detect_machine()
 
-def audit_rule_fieldpair_data(rulep, pair, flags):
-    return _audit.audit_rule_fieldpair_data(rulep, pair, flags)
-
-def audit_rule_interfield_comp_data(rulep, pair, flags):
-    return _audit.audit_rule_interfield_comp_data(rulep, pair, flags)
-
-def audit_rule_free_data(rule):
-    return _audit.audit_rule_free_data(rule)
-
-def audit_can_control():
-    return _audit.audit_can_control()
-
-def audit_can_write():
-    return _audit.audit_can_write()
-
-def audit_can_read():
-    return _audit.audit_can_read()
+def audit_msg_type_to_name(msg_type):
+    return _audit.audit_msg_type_to_name(msg_type)
 
