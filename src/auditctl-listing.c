@@ -380,7 +380,9 @@ static void print_rule(const struct audit_rule_data *r)
 					printf("-w %.*s", r->values[i],
 						&r->buf[boffset]);
 				else
-					printf(" -F path=%.*s",	r->values[i],
+					printf(" -F path%s%.*s",
+						audit_operator_to_symbol(op),
+						r->values[i],
 						&r->buf[boffset]);
 				boffset += r->values[i];
 			} else if (field == AUDIT_DIR) {
@@ -388,12 +390,15 @@ static void print_rule(const struct audit_rule_data *r)
 					printf("-w %.*s", r->values[i],
 						&r->buf[boffset]);
 				else
-					printf(" -F dir=%.*s", r->values[i],
+					printf(" -F dir%s%.*s",
+						audit_operator_to_symbol(op),
+						r->values[i],
 						&r->buf[boffset]);
 
 				boffset += r->values[i];
 			} else if (field == AUDIT_EXE) {
-				printf(" -F exe=%.*s",
+				printf(" -F exe%s%.*s",
+					audit_operator_to_symbol(op),
 					r->values[i], &r->buf[boffset]);
 				boffset += r->values[i];
 			} else if (field == AUDIT_FILTERKEY) {
@@ -557,7 +562,7 @@ static const char *get_failure(unsigned f)
  * 0 if no more should be read and 1 to indicate that more messages of this
  * type may need to be read.
  */
-int audit_print_reply(struct audit_reply *rep, int fd)
+int audit_print_reply(const struct audit_reply *rep, int fd)
 {
 	_audit_elf = 0;
 

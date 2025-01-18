@@ -59,6 +59,12 @@
 #define FAN_ALLOW 1
 #define FAN_DENY 2
 #endif
+
+// This code is at the center of many performance issues. The following
+// ensure that it is optimized the most without making all of the audit
+// subsystem bigger.
+#pragma GCC optimize("O3")
+
 #include "auparse-defs.h"
 #include "gen_tables.h"
 #include "common.h"
@@ -89,6 +95,7 @@
 #include "famtabs.h"
 #include "fcntl-cmdtabs.h"
 #include "flagtabs.h"
+#include "fsconfigs.h"
 #include "ipctabs.h"
 #include "ipccmdtabs.h"
 #include "mmaptabs.h"
@@ -321,16 +328,6 @@ static void key_escape(const char *orig, char *dest, auparse_esc_t escape_mode)
 	}
 }
 
-static int is_int_string(const char *str)
-{
-	while (*str) {
-		if (!isdigit(*str))
-			return 0;
-		str++;
-	}
-	return 1;
-}
-
 static int is_hex_string(const char *str)
 {
 	while (*str) {
@@ -365,6 +362,8 @@ char *au_unescape(char *buf)
 	// strlen(buf) / 2.
 	olen = strlen(buf);
 	str = malloc(olen+1);
+	if (!str)
+		return NULL;
 
         saved = *ptr;
         *ptr = 0;
@@ -421,6 +420,9 @@ int load_interpretation_list(const char *buffer)
 		il.cnt = 0;
 
 	il.record = buf = strdup(buffer);
+	if (buf == NULL) {
+		goto err_out;
+	}
 	if (strncmp(buf, "SADDR=", 6) == 0) {
 		// We have SOCKADDR record. It has no other values.
 		// Handle it by itself.
@@ -592,7 +594,7 @@ static const char *aulookup_uid(uid_t uid, char *buf, size_t size)
 	return buf;
 }
 
-void lookup_destroy_uid_list(void)
+void aulookup_destroy_uid_list(void)
 {
 	if (uid_cache_created == 0)
 		return;
@@ -668,6 +670,11 @@ void _auparse_flush_caches(void)
 	}
 }
 
+void aulookup_metrics(unsigned int *uid, unsigned int *gid)
+{
+	*uid = uid_cache->count;
+	*gid = gid_cache->count;
+}
 static const char *print_uid(const char *val, unsigned int base)
 {
         int uid;
@@ -1482,7 +1489,7 @@ static const char *print_success(const char *val)
 {
         int res;
 
-	if (isdigit(*val)) {
+	if (isdigit((unsigned char)*val)) {
 	        errno = 0;
 		res = strtoul(val, NULL, 10);
 	        if (errno) {
@@ -1831,6 +1838,28 @@ static const char *print_mount(const char *val)
 	return strdup(buf);
 }
 
+static const char *print_fsconfig(const char *val)
+{
+	char *out;
+	const char *s;
+	int cmd;
+
+	errno = 0;
+	cmd = strtoul(val, NULL, 16);
+	if (errno) {
+		if (asprintf(&out, "conversion error(%s)", val) < 0)
+			out = NULL;
+		return out;
+	}
+
+	s = fsconfig_i2s(cmd);
+	if (s != NULL)
+		return strdup(s);
+	if (asprintf(&out, "unknown-fsconfig-operation(%d)", cmd) < 0)
+		out = NULL;
+	return out;
+}
+
 static const char *print_rlimit(const char *val)
 {
 	int i;
@@ -1929,7 +1958,6 @@ static char *print_dirfd(const char *val)
 	errno = 0;
 	uint32_t i = strtoul(val, NULL, 16);
 	if (errno) {
-		char *out;
 		if (asprintf(&out, "conversion error(%s)", val) < 0)
 			out = NULL;
 		return out;
@@ -2277,7 +2305,7 @@ static const char *print_ioctl_req(const char *val)
 	return out;
 }
 
-static const char *fanotify[3]= { "unknown", "allow", "deny" };
+static const char *fanotify[3] = { "unknown", "allow", "deny" };
 static const char *aulookup_fanotify(unsigned s)
 {
 	switch (s)
@@ -2295,7 +2323,7 @@ static const char *print_fanotify(const char *val)
 {
         int res;
 
-	if (isdigit(*val)) {
+	if (isdigit((unsigned char)*val)) {
 	        errno = 0;
 		res = strtoul(val, NULL, 10);
 	        if (errno) {
@@ -2393,7 +2421,7 @@ static const char *print_trust(const char *val)
 	return out;
 }
 
-// fan_type always preceeds fan_info
+// fan_type always precedes fan_info
 static int last_type = 2;
 static const char *print_fan_type(const char *val)
 {
@@ -2557,6 +2585,15 @@ static const char *print_a1(const char *val, const idata *id)
 				return print_mode_short(val, 16);
 			else if (strncmp(sys, "fcntl", 5) == 0)
 				return print_fcntl_cmd(val);
+			else if (strncmp(sys, "fsconfig", 5) == 0)
+				return print_fsconfig(val);
+			else if (strncmp(sys, "fsopen", 6) == 0) {
+				if (strcmp(val, "1") == 0)
+					return strdup("FSOPEN_CLOEXEC");
+			} else if (strncmp(sys, "fsmount", 7) == 0) {
+				if (strcmp(val, "1") == 0)
+					return strdup("FSMOUNT_CLOEXEC");
+			}
 		} else if (*sys == 'c') {
 			if (strcmp(sys, "chmod") == 0)
 				return print_mode_short(val, 16);
@@ -2675,6 +2712,8 @@ static const char *print_a2(const char *val, const idata *id)
 				return print_mode_short(val, 16);
 			else if (strncmp(sys, "faccessat", 9) == 0)
 				return print_access(val);
+			else if (strncmp(sys, "fsmount", 7) == 0)
+				return print_mount(val);
 		} else if (*sys == 's') {
 			if (strcmp(sys, "setresuid") == 0)
 				return print_uid(val, 16);
@@ -2695,6 +2734,8 @@ static const char *print_a2(const char *val, const idata *id)
 				return print_mode_short(val, 16);
 			else if (strcmp(sys, "mprotect") == 0)
 				return print_prot(val, 0);
+			else if (strcmp(sys, "move_mount") == 0)
+				return print_dirfd(val);
 			else if ((strcmp(sys, "mq_open") == 0) &&
 						(id->a1 & O_CREAT))
 				return print_mode_short(val, 16);
@@ -3199,15 +3240,21 @@ int auparse_interp_adjust_type(int rtype, const char *name, const char *val)
 			rtype == AUDIT_DEL_GROUP))
 		type = AUPARSE_TYPE_GID;
 	else if (rtype == AUDIT_TRUSTED_APP) {
-		if (val[0] == '"')
-			type = AUPARSE_TYPE_ESCAPED;
-		else if (is_int_string(val))
-			type = AUPARSE_TYPE_UNCLASSIFIED;
-		/* Check if we have string with only HEX symbols */
-		else if (is_hex_string(val))
-			type = AUPARSE_TYPE_ESCAPED;
-		else
-			type = AUPARSE_TYPE_UNCLASSIFIED;
+		/*
+		 * Could be anything. See if we know the type. If not,
+		 * take a guess based on contents of value.
+		 */
+		type = lookup_type(name);
+		if (type == AUPARSE_TYPE_UNCLASSIFIED) {
+			if (val[0] == '"')
+				type = AUPARSE_TYPE_ESCAPED;
+			else if (strcmp(name, "pid") == 0)
+				type = AUPARSE_TYPE_UNCLASSIFIED;
+			/* Check if we have string with only HEX symbols */
+			else if (is_hex_string(val))
+				type = AUPARSE_TYPE_ESCAPED;
+			/* Otherwise it really is AUPARSE_TYPE_UNCLASSIFIED */
+		}
 	} else if (rtype == AUDIT_KERN_MODULE && strcmp(name, "name") == 0)
 		type = AUPARSE_TYPE_ESCAPED;
 	else

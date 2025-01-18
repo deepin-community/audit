@@ -38,6 +38,9 @@
 #include <pthread.h>
 #include <sys/utsname.h>
 #include <getopt.h>
+#ifdef HAVE_ATOMIC
+#include <stdatomic.h>
+#endif
 
 #include "libaudit.h"
 #include "auditd-event.h"
@@ -62,7 +65,7 @@
 #define SUBJ_LEN 4097
 
 /* Global Data */
-volatile int stop = 0;
+volatile ATOMIC_INT stop = 0;
 
 /* Local data */
 static int fd = -1, pipefds[2] = {-1, -1};
@@ -72,8 +75,8 @@ static const char *state_file = "/var/run/auditd.state";
 static int init_pipe[2];
 static int do_fork = 1, opt_aggregate_only = 0, config_dir_set = 0;
 static struct auditd_event *cur_event = NULL, *reconfig_ev = NULL;
-static int hup_info_requested = 0;
-static int usr1_info_requested = 0, usr2_info_requested = 0;
+static ATOMIC_INT hup_info_requested = 0;
+static ATOMIC_INT usr1_info_requested = 0, usr2_info_requested = 0;
 static char subj[SUBJ_LEN];
 static uint32_t session;
 
@@ -575,7 +578,8 @@ static void pipe_handler(struct ev_loop *loop, struct ev_io *io,
 	char buf[16];
 
 	// Drain the pipe - won't block because libev sets non-blocking mode
-	read(pipefds[0], buf, sizeof(buf));
+	if (read(pipefds[0], buf, sizeof(buf)) < 0)
+		; /* Intentionally blank - nothing we can do */
 	enqueue_event(reconfig_ev);
 	reconfig_ev = NULL;
 }
@@ -583,7 +587,8 @@ static void pipe_handler(struct ev_loop *loop, struct ev_io *io,
 void reconfig_ready(void)
 {
 	const char *msg = "ready\n";
-	write(pipefds[1], msg, strlen(msg));
+	if (write(pipefds[1], msg, strlen(msg)) < 0)
+		; /* Intentionally empty - nothing we can do */
 }
 
 static void close_pipes(void)
@@ -674,20 +679,6 @@ int main(int argc, char *argv[])
 	}
 	session = audit_get_session();
 
-#ifndef DEBUG
-	/* Make sure we can do our job. Containers may not give you
-	 * capabilities, so we revert to a uid check for that case. */
-	if (!audit_can_control()) {
-		if (!config.local_events && geteuid() == 0)
-			;
-		else {
-			fprintf(stderr,
-		"You must be root or have capabilities to run this program.\n");
-			return 4;
-		}
-	}
-#endif
-
 	/* Register sighandlers */
 	sa.sa_flags = 0 ;
 	sigemptyset( &sa.sa_mask ) ;
@@ -715,6 +706,21 @@ int main(int argc, char *argv[])
 		free_config(&config);
 		return 6;
 	}
+
+#ifndef DEBUG
+	/* Make sure we can do our job. Containers may not give you
+	 * capabilities, so we revert to a uid check for that case. */
+	if (!audit_can_control()) {
+		if (!config.local_events && geteuid() == 0)
+			;
+		else {
+			fprintf(stderr,
+		"You must be root or have capabilities to run this program.\n");
+			return 4;
+		}
+	}
+#endif
+
 	if (config.daemonize == D_FOREGROUND)
 		config.write_logs = 0;
 
@@ -723,7 +729,8 @@ int main(int argc, char *argv[])
 
 	if (config.priority_boost != 0) {
 		errno = 0;
-		nice((int)-config.priority_boost);
+		if (nice((int)-config.priority_boost))
+			; /* Intentionally blank, we have to check errno */
 		if (errno) {
 			audit_msg(LOG_ERR, "Cannot change priority (%s)", 
 					strerror(errno));
@@ -1044,7 +1051,8 @@ static void clean_exit(void)
 	audit_msg(LOG_INFO, "The audit daemon is exiting.");
 	if (fd >= 0) {
 		if (!opt_aggregate_only)
-			audit_set_pid(fd, 0, WAIT_NO);
+			if (audit_set_pid(fd, 0, WAIT_NO))
+				; // intentionally empty
 		audit_close(fd);
 	}
 	if (pidfile)

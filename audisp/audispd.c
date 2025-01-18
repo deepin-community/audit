@@ -37,6 +37,9 @@
 #include <limits.h>
 #include <sys/uio.h>
 #include <getopt.h>
+#ifdef HAVE_ATOMIC
+#include <stdatomic.h>
+#endif
 
 #include "audispd-pconfig.h"
 #include "audispd-config.h"
@@ -46,8 +49,8 @@
 #include "private.h"
 
 /* Global Data */
-static volatile int stop = 0;
-volatile int disp_hup = 0;
+static volatile ATOMIC_INT stop = 0;
+volatile ATOMIC_INT disp_hup = 0;
 
 /* Local data */
 static daemon_conf_t daemon_config;
@@ -60,6 +63,8 @@ static void signal_plugins(int sig);
 static int event_loop(void);
 static int safe_exec(plugin_conf_t *conf);
 static void *outbound_thread_main(void *arg);
+static int write_to_plugin(event_t *e, const char *string, size_t string_len,
+			   lnode *conf) __attr_access ((__read_only__, 2, 3));
 
 /*
  * Handle child plugins when they exit
@@ -396,7 +401,7 @@ static void *outbound_thread_main(void *arg)
 
 static int safe_exec(plugin_conf_t *conf)
 {
-	char *argv[MAX_PLUGIN_ARGS+2];
+	char **argv;
 	int pid, i;
 
 	/* Set up IPC with child */
@@ -425,11 +430,18 @@ static int safe_exec(plugin_conf_t *conf)
 	for (i=3; i<24; i++)	 /* Arbitrary number */
 		close(i);
 
+	argv = calloc(conf->nargs + 2, sizeof(char *));
+	if (argv == NULL) {
+		return -1;
+	}
+
 	/* Child */
 	argv[0] = (char *)conf->path;
-	for (i=1; i<(MAX_PLUGIN_ARGS+1); i++)
-		argv[i] = conf->args[i];
-	argv[i] = NULL;
+	for (i = 0; i < conf->nargs; i++) {
+		argv[i+1] = conf->args[conf->nargs-i-1];
+	}
+	argv[conf->nargs+1] = NULL;
+
 	execve(conf->path, argv, NULL);
 	exit(1);		/* Failed to exec */
 }

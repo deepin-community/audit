@@ -26,8 +26,6 @@ auparse_timestamp_compare: because AuEvent calls this via the cmp operator
  *
  */
 
-#if PY_MAJOR_VERSION > 2
-#define IS_PY3K
 #if PY_MINOR_VERSION >= 5
 #define USE_RICH_COMPARISON
 #endif
@@ -49,14 +47,6 @@ int PyFile_Check(PyObject *f) {
         }
     }
 }
-#else
-#define MODINITERROR return
-#define PYNUM_FROMLONG PyInt_FromLong
-#define PYSTR_CHECK PyString_Check
-#define PYSTR_FROMSTRING PyString_FromString
-#define PYSTR_ASSTRING PyString_AsString
-#define PYFILE_ASFILE(f) PyFile_AsFile(f)
-#endif
 
 static int debug = 0;
 static PyObject *NoParserError = NULL;
@@ -168,7 +158,7 @@ AuEvent_get_host(AuEvent *self, void *closure)
     }
 }
 
-static PyGetSetDef AuEvent_getseters[] = {
+static PyGetSetDef AuEvent_getsetters[] = {
     {"sec",    (getter)AuEvent_get_sec,    (setter)NULL, "Event seconds", NULL},
     {"milli",  (getter)AuEvent_get_milli,  (setter)NULL, "millisecond of the timestamp", NULL},
     {"serial", (getter)AuEvent_get_serial, (setter)NULL, "Serial number of the event", NULL},
@@ -235,7 +225,7 @@ static PyTypeObject AuEventType = {
     .tp_doc = AuEvent_doc,
     .tp_methods = AuEvent_methods,
     .tp_members = AuEvent_members,
-    .tp_getset = AuEvent_getseters,
+    .tp_getset = AuEvent_getsetters,
 };
 
 static PyObject *
@@ -300,7 +290,11 @@ static void auparse_callback(auparse_state_t *au,
     if (debug) printf("<< auparse_callback\n");
     arglist = Py_BuildValue("OiO", cb->py_AuParser, cb_event_type,
 			    cb->user_data);
+#if PY_MINOR_VERSION >= 12
+    result = PyObject_CallObject(cb->func, arglist);
+#else
     result = PyEval_CallObject(cb->func, arglist);
+#endif
     Py_DECREF(arglist);
     Py_XDECREF(result);
 }
@@ -750,6 +744,31 @@ AuParser_reset(AuParser *self)
     if (result ==  0) Py_RETURN_NONE;
     PyErr_SetFromErrno(PyExc_EnvironmentError);
     return NULL;
+}
+
+/********************************
+ * auparse_metrics
+ ********************************/
+PyDoc_STRVAR(metrics_doc,
+"metrics() Returns gets some basic information about auparse's internalstate.\n\
+\n\
+Returns a string holding metrics\n\
+Raises exception (RuntimeError) on error\n\
+");
+static PyObject *
+AuParser_metrics(AuParser *self)
+{
+    char *value = NULL;
+
+    PARSER_CHECK;
+    value = auparse_metrics(self->au);
+    if (value == NULL) {
+        PyErr_SetString(PyExc_RuntimeError, "metrics returned NULL");
+        return NULL;
+    }
+    PyObject *obj = Py_BuildValue("s", value);
+    free(value);
+    return obj;
 }
 
 /********************************
@@ -2262,7 +2281,7 @@ AuParser_interpret_sock_address(AuParser *self)
 }
 
 static
-PyGetSetDef AuParser_getseters[] = {
+PyGetSetDef AuParser_getsetters[] = {
     {NULL}  /* Sentinel */
 };
 
@@ -2281,6 +2300,7 @@ static PyMethodDef AuParser_methods[] = {
     {"set_escape_mode",   (PyCFunction)AuParser_set_escape_mode,   METH_VARARGS, set_escape_mode_doc},
     {"set_eoe_timeout",   (PyCFunction)AuParser_set_eoe_timeout,   METH_VARARGS, set_eoe_timeout_doc},
     {"reset",             (PyCFunction)AuParser_reset,             METH_NOARGS,  reset_doc},
+    {"metrics",           (PyCFunction)AuParser_metrics,           METH_NOARGS,  metrics_doc},
     {"search_add_expression", (PyCFunction)AuParser_search_add_expression, METH_VARARGS, search_add_expression_doc},
     {"search_add_item",   (PyCFunction)AuParser_search_add_item,   METH_VARARGS, search_add_item_doc},
     {"search_add_interpreted_item", (PyCFunction)AuParser_search_add_interpreted_item, METH_VARARGS, search_add_interpreted_item_doc},
@@ -2364,7 +2384,7 @@ static PyTypeObject AuParserType = {
     .tp_doc = AuParser_doc,
     .tp_methods = AuParser_methods,
     .tp_members = AuParser_members,
-    .tp_getset = AuParser_getseters,
+    .tp_getset = AuParser_getsetters,
     .tp_init = (initproc)AuParser_init,
     .tp_new = AuParser_new,
 };
@@ -2375,21 +2395,10 @@ static PyTypeObject AuParserType = {
  *                                Module
  *===========================================================================*/
 
-#ifndef IS_PY3K
-PyDoc_STRVAR(auparse_doc,
-"Parsing library for audit messages.\n\
-\n\
-The module defines the following exceptions:\n\
-\n\
-NoParser: Raised if the underlying C code parser is not bound to the AuParser object.\n\
-");
-#endif
-
 static PyMethodDef module_methods[] = {
     {NULL}  /* Sentinel */
 };
 
-#ifdef IS_PY3K
 static struct PyModuleDef auparse_def = {
     PyModuleDef_HEAD_INIT,
     "auparse",
@@ -2404,22 +2413,13 @@ static struct PyModuleDef auparse_def = {
 
 PyMODINIT_FUNC
 PyInit_auparse(void)
-#else
-PyMODINIT_FUNC
-initauparse(void) 
-#endif
 {
     PyObject* m;
 
     if (PyType_Ready(&AuEventType) < 0) MODINITERROR;
     if (PyType_Ready(&AuParserType) < 0) MODINITERROR;
 
-#ifdef IS_PY3K
     m = PyModule_Create(&auparse_def);
-#else
-    m = Py_InitModule3("auparse", module_methods, auparse_doc);
-#endif
-
     if (m == NULL)
       MODINITERROR;
 
@@ -2523,7 +2523,6 @@ initauparse(void)
     PyModule_AddIntConstant(m, "AUPARSE_ESC_SHELL", AUPARSE_ESC_SHELL);
     PyModule_AddIntConstant(m, "AUPARSE_ESC_SHELL_QUOTE", AUPARSE_ESC_SHELL_QUOTE);
 
-#ifdef IS_PY3K
     return m;
-#endif
 }
+

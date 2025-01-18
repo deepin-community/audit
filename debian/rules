@@ -30,12 +30,20 @@ ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes), yes)
   CONFIGURE_FLAGS += --disable-listener
 endif
 
+UID42 = $(shell LC_ALL=C id -un 42 2>/dev/null || echo 'unknown\(42\)')
+
 %:
 	dh $@ --builddirectory=debian/build --buildsystem=autoconf $(DH_ADDONS)
 
 override_dh_auto_configure: debian/config-python-stamp $(PY3VERS:%=debian/config-python3-%-stamp)
 debian/config-python-stamp:
 	dh_testdir
+	# Detect at runtime the user with UID 42
+	cp -f auparse/test/auparse_test.ref auparse/test/auparse_test.ref.orig
+	sed -e "s/gdm/${UID42}/" auparse/test/auparse_test.ref.orig > auparse/test/auparse_test.ref
+	cp -f auparse/test/auparse_test.ref.py auparse/test/auparse_test.ref.py.orig
+	sed -e "s/gdm/${UID42}/" auparse/test/auparse_test.ref.py.orig > auparse/test/auparse_test.ref.py
+
 # We should also have "--with-golang" but it's not available in all arch and
 # the golang binding package is arch:all anyway.
 	dh_auto_configure -- \
@@ -55,6 +63,8 @@ debian/config-python3-%-stamp: debian/config-python-stamp
 	touch $@
 
 override_dh_auto_clean:
+	mv -f auparse/test/auparse_test.ref.orig auparse/test/auparse_test.py || true
+	mv -f auparse/test/auparse_test.ref.py.orig auparse/test/auparse_test.ref.py || true
 	$(RM) debian/*-stamp
 	dh_auto_clean
 
@@ -64,9 +74,9 @@ debian/build-python-stamp: debian/config-python-stamp
 	dh_auto_build
 	touch $@
 debian/build-python3-%-stamp: debian/config-python3-%-stamp debian/build-python-stamp
-	PYTHON=/usr/bin/python$* $(MAKE) -C debian/build/bindings/swig3.$*/python3   py3execdir=/usr/lib/python$*/dist-packages \
+	PYTHON=/usr/bin/python$* $(MAKE) -C debian/build/bindings/swig3.$*/python3   pyexecdir=/usr/lib/python$*/dist-packages \
 	    PYTHON3_CFLAGS="$(shell python$*-config --cflags 2> /dev/null)" PYTHON3_LIBS="$(shell python$*-config --libs 2> /dev/null)" PYTHON3_INCLUDES="$(shell python$*-config --includes 2> /dev/null)"
-	PYTHON=/usr/bin/python$* $(MAKE) -C debian/build/bindings/python3.$*/python3 py3execdir=/usr/lib/python$*/dist-packages \
+	PYTHON=/usr/bin/python$* $(MAKE) -C debian/build/bindings/python3.$*/python3 pyexecdir=/usr/lib/python$*/dist-packages \
 	    PYTHON3_CFLAGS="$(shell python$*-config --cflags 2> /dev/null)" PYTHON3_LIBS="$(shell python$*-config --libs 2> /dev/null)" PYTHON3_INCLUDES="$(shell python$*-config --includes 2> /dev/null)"
 	touch $@
 
@@ -75,9 +85,9 @@ debian/install-python-stamp: debian/build-python-stamp
 	dh_auto_install --sourcedir=debian/build --destdir=debian/tmp
 	touch $@
 debian/install-python3-%-stamp: debian/build-python3-%-stamp debian/install-python-stamp
-	PYTHON=/usr/bin/python$* $(MAKE) -C debian/build/bindings/swig3.$*/python3   py3execdir=/usr/lib/python$*/dist-packages DESTDIR=$(CURDIR)/debian/tmp install \
+	PYTHON=/usr/bin/python$* $(MAKE) -C debian/build/bindings/swig3.$*/python3   pyexecdir=/usr/lib/python$*/dist-packages DESTDIR=$(CURDIR)/debian/tmp install \
 	    PYTHON3_CFLAGS="$(shell python$*-config --cflags 2> /dev/null)" PYTHON3_LIBS="$(shell python$*-config --libs 2> /dev/null)" PYTHON3_INCLUDES="$(shell python$*-config --includes 2> /dev/null)"
-	PYTHON=/usr/bin/python$* $(MAKE) -C debian/build/bindings/python3.$*/python3 py3execdir=/usr/lib/python$*/dist-packages DESTDIR=$(CURDIR)/debian/tmp install \
+	PYTHON=/usr/bin/python$* $(MAKE) -C debian/build/bindings/python3.$*/python3 pyexecdir=/usr/lib/python$*/dist-packages DESTDIR=$(CURDIR)/debian/tmp install \
 	    PYTHON3_CFLAGS="$(shell python$*-config --cflags 2> /dev/null)" PYTHON3_LIBS="$(shell python$*-config --libs 2> /dev/null)" PYTHON3_INCLUDES="$(shell python$*-config --includes 2> /dev/null)"
 	touch $@
 override_dh_auto_install: debian/install-python-stamp $(PY3VERS:%=debian/install-python3-%-stamp)
@@ -94,9 +104,6 @@ override_dh_installexamples:
 
 override_dh_installlogrotate:
 	# auditd has a equivalent built-in feature
-
-override_dh_installsystemd:
-	dh_installsystemd --no-start --no-enable
 
 override_dh_installinit:
 	dh_installinit --restart-after-upgrade
