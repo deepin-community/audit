@@ -1,6 +1,12 @@
+audit (1:3.1.2-2deepin7) unstable; urgency=medium
+
+  * feat: support sw64.
+
+ -- zhangya <zhangya@uniontech.com>  Mon, 07 Apr 2025 10:49:03 +0800
+
 audit (1:3.1.2-2deepin6) unstable; urgency=medium
 
-  *   feat: loongarch support.
+  * feat: loongarch support.
             usermod audit add user name.
 
  -- zhangya <zhangya@uniontech.com>  Fri, 27 Sep 2024 17:10:03 +0800
