@@ -501,6 +501,54 @@ int audit_log_acct_message(int audit_fd, int type, const char *pgname,
 			tty ? tty : "?",
 			success
 			);
+	} else if (name) {
+		char user[MAX_USER];
+		const char *format;
+		size_t len;
+
+		user[0] = 0;
+		strncat(user, name, MAX_USER-1);
+		len = strnlen(user, UT_NAMESIZE);
+		user[len] = 0;
+		if (audit_value_needs_encoding(name, len)) {
+			audit_encode_value(user, name, len);
+			format =
+			"op=%s id=%u acct=%s exe=%s hostname=%s addr=%s terminal=%s res=%s";
+		} else
+			format =
+			"op=%s id=%u acct=\"%s\" exe=%s hostname=%s addr=%s terminal=%s res=%s";
+
+		snprintf(buf, sizeof(buf), format,
+			op, id, user, exename,
+			host ? host : "?",
+			addrbuf,
+			tty ? tty : "?",
+			success
+			);
+	} else if (name) {
+		char user[MAX_USER];
+		const char *format;
+		size_t len;
+
+		user[0] = 0;
+		strncat(user, name, MAX_USER-1);
+		len = strnlen(user, UT_NAMESIZE);
+		user[len] = 0;
+		if (audit_value_needs_encoding(name, len)) {
+			audit_encode_value(user, name, len);
+			format =
+			"op=%s id=%u acct=%s exe=%s hostname=%s addr=%s terminal=%s res=%s";
+		} else
+			format =
+			"op=%s id=%u acct=\"%s\" exe=%s hostname=%s addr=%s terminal=%s res=%s";
+
+		snprintf(buf, sizeof(buf), format,
+			op, id, user, exename,
+			host ? host : "?",
+			addrbuf,
+			tty ? tty : "?",
+			success
+			);
 	} else
 		snprintf(buf, sizeof(buf),
 		"op=%s id=%u exe=%s hostname=%s addr=%s terminal=%s res=%s",

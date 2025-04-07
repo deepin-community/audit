@@ -257,6 +257,9 @@ Saved User ID. See getresuid(2) man page.
 .TP
 .B uid
 User ID. May be numeric or the user account name.
+.TP
+.B nametype
+audit_names record type. numberic, AUDIT_TYPE_UNKNOWN=0,AUDIT_TYPE_NORMAL=1,AUDIT_TYPE_PARENT=2,AUDIT_TYPE_CHILD_DELETE=3,AUDIT_TYPE_CHILD_CREATE=4. in syscall open, AUDIT_TYPE_CHILD_CREATE mean file real create.
 .RE
 .TP
 .BI \-k\  key

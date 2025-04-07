@@ -826,6 +826,8 @@ struct signalfd_siginfo
       /* GNU/Linux emulates sync on mips1 architectures, so we force its use */
       /* anybody else who still uses mips1 is supposed to send in their version, with detection code. */
       #define ECB_MEMORY_FENCE         __asm__ __volatile__ (".set mips2; sync; .set mips0" : : : "memory")
+    #elif defined __loongarch__
+      #define ECB_MEMORY_FENCE         __asm__ __volatile__ ("dbar 0" : : : "memory")
     #elif defined __alpha__
       #define ECB_MEMORY_FENCE         __asm__ __volatile__ ("mb"       : : : "memory")
     #elif defined __hppa__
@@ -839,6 +841,8 @@ struct signalfd_siginfo
       #define ECB_MEMORY_FENCE         __asm__ __volatile__ ("tb1 0,%%r0,128" : : : "memory")
     #elif defined __sh__
       #define ECB_MEMORY_FENCE         __asm__ __volatile__ (""         : : : "memory")
+    #elif defined __sw_64__
+      #define ECB_MEMORY_FENCE         __asm__ __volatile__ ("memb"         : : : "memory")
     #endif
   #endif
 #endif
@@ -1549,12 +1553,14 @@ ecb_binary32_to_binary16 (uint32_t x)
     || __powerpc__ || __ppc__ || __powerpc64__ || __ppc64__ \
     || defined __s390__ || defined __s390x__ \
     || defined __mips__ \
+    || defined __loongarch__ \
     || defined __alpha__ \
     || defined __hppa__ \
     || defined __ia64__ \
     || defined __m68k__ \
     || defined __m88k__ \
     || defined __sh__ \
+    || defined __sw_64__ \
     || defined _M_IX86 || defined ECB_MSVC_AMD64 || defined _M_IA64 \
     || (defined __arm__ && (defined __ARM_EABI__ || defined __EABI__ || defined __VFP_FP__ || defined _WIN32_WCE || defined __ANDROID__)) \
     || defined __aarch64__

@@ -70,3 +70,5 @@ _S(AUDIT_ARG3,         "a3"           )
 _S(AUDIT_FILTERKEY,    "key"          )
 _S(AUDIT_EXE,          "exe"          )
 _S(AUDIT_SADDR_FAM,    "saddr_fam"    )
+
+_S(AUDIT_NAMETYPE,     "nametype"     )

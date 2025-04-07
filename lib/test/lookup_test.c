@@ -171,6 +171,70 @@ test_i386_table(void)
 }
 
 static void
+test_mips_o32_table(void)
+{
+	static const struct entry t[] = {
+#include "../mips_o32_table.h"
+	};
+
+	printf("Testing O32 mips_table...\n");
+#define I2S(I) audit_syscall_to_name((I), MACH_MIPS)
+#define S2I(S) audit_name_to_syscall((S), MACH_MIPS)
+	TEST_I2S(0);
+	TEST_S2I(-1);
+#undef I2S
+#undef S2I
+}
+
+static void
+test_mips_n32_table(void)
+{
+	static const struct entry t[] = {
+#include "../mips_n32_table.h"
+	};
+
+	printf("Testing mips_n32_table...\n");
+#define I2S(I) audit_syscall_to_name((I), MACH_MIPS64_N32)
+#define S2I(S) audit_name_to_syscall((S), MACH_MIPS64_N32)
+	TEST_I2S(0);
+	TEST_S2I(-1);
+#undef I2S
+#undef S2I
+}
+
+static void
+test_mips_n64_table(void)
+{
+	static const struct entry t[] = {
+#include "../mips_n64_table.h"
+	};
+
+	printf("Testing N64 mips_table...\n");
+#define I2S(I) audit_syscall_to_name((I), MACH_MIPS64)
+#define S2I(S) audit_name_to_syscall((S), MACH_MIPS64)
+	TEST_I2S(0);
+	TEST_S2I(-1);
+#undef I2S
+#undef S2I
+}
+
+static void
+test_loongarch64_table(void)
+{
+	static const struct entry t[] = {
+#include "../loongarch64_table.h"
+	};
+
+	printf("Testing loongarch64_table...\n");
+#define I2S(I) audit_syscall_to_name((I), MACH_LOONGARCH64)
+#define S2I(S) audit_name_to_syscall((S), MACH_LOONGARCH64)
+	TEST_I2S(0);
+	TEST_S2I(-1);
+#undef I2S
+#undef S2I
+}
+
+static void
 test_ppc_table(void)
 {
 	static const struct entry t[] = {
@@ -409,6 +473,10 @@ main(void)
 	test_aarch64_table();
 #endif
 	test_i386_table();
+	test_mips_o32_table();
+	test_mips_n32_table();
+	test_mips_n64_table();
+	test_loongarch64_table();
 	test_ppc_table();
 	test_s390_table();
 	test_s390x_table();

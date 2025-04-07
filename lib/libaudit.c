@@ -1402,6 +1402,9 @@ int audit_determine_machine(const char *arch)
 	} else if (strcasecmp("b32", arch) == 0) {
 		bits = ~__AUDIT_ARCH_64BIT;
 		machine = audit_detect_machine();
+	} else if (strcasecmp("n32", arch) == 0) {
+		bits = __AUDIT_ARCH_64BIT;
+		machine = MACH_MIPS64_N32;
 	} else {
 		machine = audit_name_to_machine(arch);
 		if (machine < 0) {
@@ -1428,6 +1431,10 @@ int audit_determine_machine(const char *arch)
 		machine = MACH_S390;
 	else if (bits == ~__AUDIT_ARCH_64BIT && machine == MACH_AARCH64)
 		machine = MACH_ARM;
+	else if (bits == ~__AUDIT_ARCH_64BIT && machine == MACH_MIPS64)
+		machine = MACH_MIPS;
+	else if (bits == ~__AUDIT_ARCH_64BIT && machine == MACH_MIPS64EL)
+		machine = MACH_MIPSEL;
 
 	/* Check for errors - return -6
 	 * We don't allow 32 bit machines to specify 64 bit. */
@@ -1457,10 +1464,22 @@ int audit_determine_machine(const char *arch)
 				return -6; /* 64 bit only */
 			break;
 #endif
+		case MACH_MIPS:
+		case MACH_MIPSEL:
+			if (bits == __AUDIT_ARCH_64BIT)
+				return -6;
+ 			break;
+
 		case MACH_86_64:   /* fallthrough */
 		case MACH_PPC64:   /* fallthrough */
 		case MACH_S390X:   /* fallthrough */
 		case MACH_IO_URING:
+		case MACH_SUNWAY: /* fallthrough */
+		case MACH_MIPS64:
+		case MACH_MIPS64EL:
+		case MACH_MIPS64_N32:
+		case MACH_MIPS64EL_N32:
+		case MACH_LOONGARCH64:   /* fallthrough */
 			break;
 		case MACH_PPC64LE: /* 64 bit only */
 			if (bits && bits != __AUDIT_ARCH_64BIT)
@@ -1925,13 +1944,49 @@ static int audit_name_to_gid(const char *name, gid_t *gid)
 	return 0;
 }
 
+inline const unsigned char uos_byteorder_helper (void)
+{
+  /* the union code still generates code under pressure in gcc, */
+  /* but less than using pointers, and always seems to */
+  /* successfully return a constant. */
+  /* the reason why we have this horrible preprocessor mess */
+  /* is to avoid it in all cases, at least on common architectures */
+  /* or when using a recent enough gcc version (>= 4.6) */
+  union
+  {
+    uint32_t i;
+    uint8_t c;
+  } u = { 0x11223344 };
+  return u.c;
+}
+
+inline const int uos_big_endian    (void);
+inline const int uos_big_endian    (void) { return uos_byteorder_helper () == 0x11; }
+inline const int uos_little_endian (void);
+inline const int uos_little_endian (void) { return uos_byteorder_helper () == 0x44; }
+
 int audit_detect_machine(void)
 {
+#if 0
 	struct utsname uts;
 	if (uname(&uts) == 0)
 //		strcpy(uts.machine, "x86_64");
 		return audit_name_to_machine(uts.machine);
 	return -1;
+#endif
+	struct utsname uts;
+	int little_endian = uos_little_endian();
+
+	if (uname(&uts) != 0)
+		return -1;
+
+	// strcpy(uts.machine, "x86_64");
+	if (!strcmp(uts.machine, "mips64") && little_endian) {
+		strcpy(uts.machine, "mips64el");
+	} else if (!strcmp(uts.machine, "mips") && little_endian)
+		strcpy(uts.machine, "mipsel");
+
+	return audit_name_to_machine(uts.machine);
 }
 
 #ifndef NO_TABLES

@@ -1636,13 +1636,14 @@ static int au_auparse_next_event(auparse_state_t *au)
 			free(l);
 			continue;
 		}
-		// Eat standalone EOE - main event was already marked complete
-		if (l->head->type == AUDIT_EOE) {
-			au->cur_buf = NULL;
-			aup_list_clear(l);
-			free(l);
-			continue;
-		}
+		// 如果吃掉,audisp讲无法接收到AUDIT_EOE消息,这会导致消息处理有问题https://lists.linux-audit.osci.io/archives/list/linux-audit@lists.linux-audit.osci.io/thread/M24F7DOPPJKSVR4MVO34P2PP2HA5O5TZ/?sort=thread
+		// // Eat standalone EOE - main event was already marked complete
+		// if (l->head->type == AUDIT_EOE) {
+		// 	au->cur_buf = NULL;
+		// 	aup_list_clear(l);
+		// 	free(l);
+		// 	continue;
+		// }
 		if (au_lol_append(au->au_lo, l) == NULL) {
 			free((char *)e.host);
 #ifdef	LOL_EVENTS_DEBUG01

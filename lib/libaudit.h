@@ -42,6 +42,58 @@
 extern "C" {
 #endif
 
+/*
+ * The following defines should be defined in the kernel headers.  Until
+ * the new defines get picked up by the toolchain, these defines will supply
+ * the values.
+ */
+#ifndef AUDIT_ARCH_MIPS64EL
+#define AUDIT_ARCH_MIPS64EL    (EM_MIPS|__AUDIT_ARCH_64BIT|__AUDIT_ARCH_LE)
+#endif
+#ifndef __AUDIT_ARCH_ALT
+#define __AUDIT_ARCH_ALT   0x20000000  /* indicates alternative ABI  */
+#endif
+#ifndef AUDIT_ARCH_MIPS64_N32
+#define AUDIT_ARCH_MIPS64_N32  (EM_MIPS|__AUDIT_ARCH_ALT)
+#endif
+#ifndef AUDIT_ARCH_MIPS64EL_N32
+#define AUDIT_ARCH_MIPS64EL_N32    (EM_MIPS|__AUDIT_ARCH_ALT|__AUDIT_ARCH_LE)
+#endif
+
+#ifdef __mips__
+#undef AUDIT_BITMASK_SIZE
+#define AUDIT_BITMASK_SIZE 256
+
+struct audit_rule_data_mips {
+   __u32       flags;  /* AUDIT_PER_{TASK,CALL}, AUDIT_PREPEND */
+   __u32       action; /* AUDIT_NEVER, AUDIT_POSSIBLE, AUDIT_ALWAYS */
+   __u32       field_count;
+   __u32       mask[AUDIT_BITMASK_SIZE]; /* syscall(s) affected */  
+   __u32       fields[AUDIT_MAX_FIELDS];                            
+   __u32       values[AUDIT_MAX_FIELDS];                            
+   __u32       fieldflags[AUDIT_MAX_FIELDS];                        
+   __u32       buflen; /* total length of string fields */          
+   char        buf[0]; /* string fields buffer */                   
+};
+                                                                    
+#define audit_rule_data audit_rule_data_mips
+
+/* audit_rule is supported to maintain backward compatibility with
+ * userspace.  It supports integer fields only and corresponds to
+ * AUDIT_ADD, AUDIT_DEL and AUDIT_LIST requests.
+ */
+struct audit_rule_mips {   /* for AUDIT_LIST, AUDIT_ADD, and AUDIT_DEL */
+   __u32       flags;  /* AUDIT_PER_{TASK,CALL}, AUDIT_PREPEND */
+   __u32       action; /* AUDIT_NEVER, AUDIT_POSSIBLE, AUDIT_ALWAYS */
+   __u32       field_count;
+   __u32       mask[AUDIT_BITMASK_SIZE];
+   __u32       fields[AUDIT_MAX_FIELDS];
+   __u32       values[AUDIT_MAX_FIELDS];
+};
+
+#define audit_rule audit_rule_mips
+
+#endif /* defined(__mips__) */
 
 /* Audit message types as of 2.6.29 kernel:
  * 1000 - 1099 are for commanding the audit system
@@ -406,6 +458,10 @@ extern "C" {
 #define AUDIT_SADDR_FAM 113
 #endif
 
+#ifndef AUDIT_NAMETYPE
+#define AUDIT_NAMETYPE 198
+#endif
+
 #ifndef AUDIT_SESSIONID
 #define AUDIT_SESSIONID 25
 #endif
@@ -495,6 +551,14 @@ extern "C" {
 #endif
 #ifndef EM_AARCH64
 #define EM_AARCH64 183
+#endif
+
+#ifndef AUDIT_ARCH_LOONGARCH64
+#define AUDIT_ARCH_LOONGARCH64 (EM_LOONGARCH64|__AUDIT_ARCH_64BIT|__AUDIT_ARCH_LE)
+#endif
+
+#ifndef EM_LOONGARCH64
+#define EM_LOONGARCH64 258
 #endif
 
 #ifndef AUDIT_ARCH_AARCH64
@@ -594,10 +658,18 @@ typedef enum {
 	MACH_S390X,
 	MACH_S390,
 	MACH_ALPHA,	// Deprecated but has to stay
+	MACH_SUNWAY,
 	MACH_ARM,
 	MACH_AARCH64,
 	MACH_PPC64LE,
-	MACH_IO_URING
+	MACH_IO_URING,
+	MACH_MIPS,
+	MACH_MIPSEL,
+	MACH_MIPS64,
+	MACH_MIPS64EL,
+	MACH_MIPS64_N32,
+	MACH_MIPS64EL_N32,
+	MACH_LOONGARCH64,
 } machine_t;
 
 /* These are the valid audit failure tunable enum values */

@@ -41,11 +41,18 @@
 #ifdef WITH_AARCH64
 #include "aarch64_tables.h"
 #endif
+#ifdef WITH_SUNWAY
+#include "sunway_tables.h"
+#endif
 #include "i386_tables.h"
 #include "ppc_tables.h"
 #include "s390_tables.h"
 #include "s390x_tables.h"
 #include "x86_64_tables.h"
+#include "mips_o32_tables.h"
+#include "mips_n32_tables.h"
+#include "mips_n64_tables.h"
+#include "loongarch64_tables.h"
 #ifdef WITH_IO_URING
 #include "uringop_tables.h"
 #endif
@@ -79,6 +86,16 @@ static const struct int_transtab elftab[] = {
 #ifdef WITH_AARCH64
     { MACH_AARCH64, AUDIT_ARCH_AARCH64},
 #endif
+#ifdef WITH_SUNWAY
+    { MACH_SUNWAY, AUDIT_ARCH_SW64},
+#endif
+    { MACH_MIPS,    AUDIT_ARCH_MIPS     },
+    { MACH_MIPSEL,  AUDIT_ARCH_MIPSEL   },
+    { MACH_MIPS64,  AUDIT_ARCH_MIPS64   },
+    { MACH_MIPS64EL,    AUDIT_ARCH_MIPS64EL     },
+    { MACH_MIPS64_N32,  AUDIT_ARCH_MIPS64_N32   },
+    { MACH_MIPS64EL_N32, AUDIT_ARCH_MIPS64EL_N32 },
+    { MACH_LOONGARCH64,    AUDIT_ARCH_LOONGARCH64   }
 };
 #define AUDIT_ELF_NAMES (sizeof(elftab)/sizeof(elftab[0]))
 
@@ -129,6 +146,17 @@ int audit_name_to_syscall(const char *sc, int machine)
 		case MACH_86_64:
 			found = x86_64_syscall_s2i(sc, &res);
 			break;
+		case MACH_MIPS:
+		case MACH_MIPSEL:
+			found = mips_o32_syscall_s2i(sc, &res);
+			break;
+		case MACH_MIPS64:
+		case MACH_MIPS64EL:
+			found = mips_n64_syscall_s2i(sc, &res);
+			break;
+		case MACH_MIPS64_N32:
+			found = mips_n32_syscall_s2i(sc, &res);
+			break;
 		case MACH_PPC64:
 		case MACH_PPC64LE:
 		case MACH_PPC:
@@ -150,9 +178,17 @@ int audit_name_to_syscall(const char *sc, int machine)
 			found = aarch64_syscall_s2i(sc, &res);
 			break;
 #endif
+#ifdef WITH_SUNWAY
+	        case MACH_SUNWAY:
+			found = sunway_syscall_s2i(sc, &res);
+			break;
+#endif
 #endif
 		case MACH_IO_URING:
 			return audit_name_to_uringop(sc);
+			break;
+		case MACH_LOONGARCH64:
+			found = loongarch64_syscall_s2i(sc, &res);
 			break;
 		default:
 			return -1;
@@ -197,8 +233,22 @@ const char *audit_syscall_to_name(int sc, int machine)
 	        case MACH_AARCH64:
 			return aarch64_syscall_i2s(sc);
 #endif
+#ifdef WITH_SUNWAY
+	        case MACH_SUNWAY:
+			return sunway_syscall_i2s(sc);
+#endif
 		case MACH_IO_URING:
 			return audit_uringop_to_name(sc);
+		case MACH_MIPS:
+		case MACH_MIPSEL:
+			return mips_o32_syscall_i2s(sc);
+		case MACH_MIPS64:
+		case MACH_MIPS64EL:
+			return mips_n64_syscall_i2s(sc);
+		case MACH_MIPS64_N32:
+			return mips_n32_syscall_i2s(sc);
+		case MACH_LOONGARCH64:
+			return loongarch64_syscall_i2s(sc);
 	}
 #endif
 	return NULL;

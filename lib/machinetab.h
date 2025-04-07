@@ -42,7 +42,14 @@ _S(MACH_ARM,   "armv7l")
 _S(MACH_AARCH64,   "aarch64"  )
 _S(MACH_AARCH64,   "armv8l")
 #endif
+#ifdef WITH_SUNWAY
+_S(MACH_SUNWAY,   "sw_64")
+#endif
 #ifdef WITH_IO_URING
 _S(MACH_IO_URING,   "uring")
 #endif
-
+_S(MACH_MIPS64,  "mips64" )
+_S(MACH_MIPS64EL,  "mips64el" )
+_S(MACH_MIPS,    "mips"   )
+_S(MACH_MIPSEL,    "mipsel"   )
+_S(MACH_LOONGARCH64,   "loongarch64"  )

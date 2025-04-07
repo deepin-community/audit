@@ -722,7 +722,7 @@ static int common_path_parser(search_items *s, char *path)
 			sn.key = NULL;
 			sn.hits = 1;
 			// Attempt to rebuild path if relative
-			if ((sn.str[0] == '.') && ((sn.str[1] == '.') ||
+			if (sn.str && (sn.str[0] == '.') && ((sn.str[1] == '.') ||
 				(sn.str[1] == '/')) && s->cwd) {
 				char *tmp = malloc(PATH_MAX);
 				if (tmp == NULL) {

@@ -402,6 +402,18 @@ AM_CONDITIONAL(USE_AARCH64, test x$use_aarch64 = xyes)
 AC_MSG_RESULT($use_aarch64)
 
 withval=""
+AC_MSG_CHECKING(whether to include sunway processor support)
+AC_ARG_WITH(sunway,
+AS_HELP_STRING([--with-sunway],[enable Sunway processor support]),
+use_sunway=$withval,
+use_sunway=no)
+if test x$use_sunway != xno ; then
+      AC_DEFINE(WITH_SUNWAY,1,[Define if you want to enable Sunway processor support.])
+fi
+AM_CONDITIONAL(USE_SUNWAY, test x$use_sunway = xyes)
+AC_MSG_RESULT($use_sunway)
+
+withval=""
 AC_MSG_CHECKING(whether to use apparmor)
 AC_ARG_WITH(apparmor,
 AS_HELP_STRING([--with-apparmor],[enable AppArmor events]),
