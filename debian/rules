@@ -7,6 +7,7 @@ include /usr/share/dpkg/architecture.mk
 LDFLAGS += -Wl,--as-needed
 DH_ADDONS =
 CONFIGURE_FLAGS =
+SUNWAY_CONFIGURE_FLAGS =
 
 ifeq ($(filter nopython,$(DEB_BUILD_PROFILES)),)
 # For building bindings/swig/ and bindings/python/ for all Python version, these directories are cloned and build in addition to the main library
@@ -30,6 +31,10 @@ ifeq ($(shell dpkg-vendor --derives-from Ubuntu && echo yes), yes)
   CONFIGURE_FLAGS += --disable-listener
 endif
 
+ifeq ($(DEB_BUILD_ARCH),sw64)
+  SUNWAY_CONFIGURE_FLAGS += --with-sunway
+endif
+
 %:
 	dh $@ --builddirectory=debian/build --buildsystem=autoconf $(DH_ADDONS)
 
@@ -47,7 +52,9 @@ debian/config-python-stamp:
 		--with-libcap-ng \
 		--with-io_uring \
 		$(CONFIGURE_FLAGS) \
-		--with-arm --with-aarch64 ${EXTRA_ARCH_TABLE}
+		--with-arm --with-aarch64 \
+		${SUNWAY_FLAGS} \
+		${EXTRA_ARCH_TABLE}
 	touch $@
 debian/config-python3-%-stamp: debian/config-python-stamp
 	cp -lpr debian/build/bindings/swig   debian/build/bindings/swig3.$*
